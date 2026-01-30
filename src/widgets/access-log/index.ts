@@ -1,1 +1,1 @@
-export { AccessLogList } from './ui';
+export { AccessLogList, AccessLogTimeline } from './ui';

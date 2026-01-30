@@ -4,6 +4,9 @@ import { useRef, useEffect, useState } from 'react';
 import { Card, CardBody, Button } from '@/shared/ui';
 import { CAMERA_CONFIG } from '@/shared/config/constants';
 
+type Resolution = '480p' | '720p' | '1080p';
+type Orientation = 'landscape' | 'portrait';
+
 interface CameraViewProps {
   onVideoReady?: (video: HTMLVideoElement, canvas: HTMLCanvasElement) => void;
   onVideoStop?: () => void;
@@ -11,7 +14,15 @@ interface CameraViewProps {
   autoStart?: boolean;
   className?: string;
   fullScreen?: boolean; // 전체 화면 모드 (Card 래퍼 제거)
+  resolution?: Resolution; // 해상도 설정
+  orientation?: Orientation; // 방향 설정
 }
+
+const RESOLUTION_MAP = {
+  '480p': { width: 640, height: 480 },
+  '720p': { width: 1280, height: 720 },
+  '1080p': { width: 1920, height: 1080 },
+};
 
 export function CameraView({
   onVideoReady,
@@ -20,6 +31,8 @@ export function CameraView({
   autoStart = false,
   className = '',
   fullScreen = false,
+  resolution = '720p',
+  orientation = 'landscape',
 }: CameraViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -43,10 +56,16 @@ export function CameraView({
 
     try {
       setError(null);
+
+      // 해상도 및 방향에 따른 설정
+      const { width, height } = RESOLUTION_MAP[resolution];
+      const videoConstraints = orientation === 'portrait'
+        ? { width: { ideal: height }, height: { ideal: width } }
+        : { width: { ideal: width }, height: { ideal: height } };
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: CAMERA_CONFIG.WIDTH },
-          height: { ideal: CAMERA_CONFIG.HEIGHT },
+          ...videoConstraints,
           facingMode: CAMERA_CONFIG.FACING_MODE,
         },
       });
