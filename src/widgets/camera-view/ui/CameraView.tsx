@@ -9,6 +9,8 @@ interface CameraViewProps {
   onVideoStop?: () => void;
   showControls?: boolean;
   autoStart?: boolean;
+  className?: string;
+  fullScreen?: boolean; // 전체 화면 모드 (Card 래퍼 제거)
 }
 
 export function CameraView({
@@ -16,6 +18,8 @@ export function CameraView({
   onVideoStop,
   showControls = true,
   autoStart = false,
+  className = '',
+  fullScreen = false,
 }: CameraViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,8 +113,73 @@ export function CameraView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 전체 화면 모드 - Card 래퍼 없이 렌더링
+  if (fullScreen) {
+    return (
+      <div className={`relative bg-gray-900 ${className}`}>
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+          style={{ transform: 'scaleX(-1)' }}
+          playsInline
+          muted
+        />
+        <canvas
+          ref={canvasRef}
+          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          style={{ transform: 'scaleX(-1)' }}
+        />
+
+        {/* 오버레이 - 카메라 비활성화 */}
+        {!isStreaming && !error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
+            <div className="text-center text-white">
+              <svg
+                className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 opacity-50"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="text-base sm:text-lg opacity-75">카메라가 비활성화되어 있습니다</p>
+            </div>
+          </div>
+        )}
+
+        {/* 에러 메시지 */}
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-red-900/80">
+            <div className="text-center text-white p-6">
+              <svg
+                className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <p className="text-base sm:text-lg">{error}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 일반 모드 - Card 래퍼 포함
   return (
-    <Card className="overflow-hidden">
+    <Card className={`overflow-hidden ${className}`}>
       <CardBody className="p-0 relative">
         {/* 비디오 컨테이너 - 적응형 */}
         <div className="relative aspect-video bg-gray-900">
