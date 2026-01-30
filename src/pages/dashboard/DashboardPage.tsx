@@ -9,14 +9,16 @@ import { AccessLogTimeline } from '@/widgets/access-log';
 import { UserManagementPanel } from '@/widgets/user-management';
 import { useFaceDetection } from '@/features/face-detection';
 import { loadModels, detectFace, findBestMatch, faceapi } from '@/shared/lib/face-api';
-import { Toast } from '@/shared/ui';
+import { ResultOverlay } from '@/shared/ui';
 
 type Resolution = '480p' | '720p' | '1080p';
 type Orientation = 'landscape' | 'portrait';
 
-interface ToastState {
+interface ResultState {
+  type: 'success' | 'failed';
+  userName?: string;
+  confidence?: number;
   message: string;
-  type: 'success' | 'error' | 'info';
 }
 
 export function DashboardPage() {
@@ -28,7 +30,7 @@ export function DashboardPage() {
   const [orientation, setOrientation] = useState<Orientation>('landscape');
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [toast, setToast] = useState<ToastState | null>(null);
+  const [result, setResult] = useState<ResultState | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -87,7 +89,10 @@ export function DashboardPage() {
 
       if (!detection) {
         addAccessLog(null, null, 'failed');
-        setToast({ message: '얼굴이 감지되지 않았습니다', type: 'error' });
+        setResult({
+          type: 'failed',
+          message: '얼굴이 감지되지 않았습니다',
+        });
         return;
       }
 
@@ -96,13 +101,21 @@ export function DashboardPage() {
 
       if (!bestMatch || bestMatch.label === 'unknown') {
         addAccessLog(null, '미확인 사용자', 'failed');
-        setToast({ message: '등록되지 않은 얼굴입니다', type: 'error' });
+        setResult({
+          type: 'failed',
+          message: '등록되지 않은 얼굴입니다',
+        });
       } else {
         const user = getUserById(bestMatch.label);
         const userName = user?.name || '알 수 없음';
         const confidence = 1 - bestMatch.distance;
         addAccessLog(bestMatch.label, userName, 'success', confidence);
-        setToast({ message: `인증 성공: ${userName}`, type: 'success' });
+        setResult({
+          type: 'success',
+          userName,
+          confidence,
+          message: '인증 성공',
+        });
       }
 
       const ctx = canvasRef.current.getContext('2d');
@@ -116,7 +129,10 @@ export function DashboardPage() {
     } catch (error) {
       console.error('인증 실패:', error);
       addAccessLog(null, null, 'failed');
-      setToast({ message: '인증 중 오류가 발생했습니다', type: 'error' });
+      setResult({
+        type: 'failed',
+        message: '인증 중 오류가 발생했습니다',
+      });
     } finally {
       setIsAuthenticating(false);
     }
@@ -240,12 +256,14 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Toast */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
+      {/* 결과 오버레이 */}
+      {result && (
+        <ResultOverlay
+          type={result.type}
+          userName={result.userName}
+          confidence={result.confidence}
+          message={result.message}
+          onClose={() => setResult(null)}
         />
       )}
     </div>
