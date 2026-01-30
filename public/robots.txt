@@ -1,0 +1,9 @@
+# Face Recognition Access Control
+# https://github.com/stomx/face-recognition
+
+User-agent: *
+Allow: /
+Disallow: /models/
+
+# Sitemap
+Sitemap: https://face-recognition.pages.dev/sitemap.xml
