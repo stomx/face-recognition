@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f4f6;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 적응형 UI 브레이크포인트 */
+  /* HD: 1280px (xl - 기본) */
+  /* FHD: 1536px (2xl - 기본) */
+  /* QHD: 1920px (3xl - 커스텀) */
+  --breakpoint-3xl: 1920px;
+}
+
+/* 세로 모드 (portrait) 변형 */
+@custom-variant portrait (&:where(@media (orientation: portrait)));
+
+/* 가로 모드 (landscape) 변형 */
+@custom-variant landscape (&:where(@media (orientation: landscape)));
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}

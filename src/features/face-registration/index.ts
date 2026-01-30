@@ -1,0 +1,1 @@
+export { useFaceRegistration } from './model';
