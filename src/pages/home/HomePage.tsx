@@ -40,24 +40,43 @@ const TimeDisplay = memo(function TimeDisplay() {
   );
 });
 
-export function HomePage() {
-  const { users, accessLogs, isHydrated, hydrate } = useUserStore();
-  const { modelStatus, initializeModels } = useFaceDetection();
+// ★ 설정 패널 분리 (부모 리렌더링의 영향을 받지 않도록)
+interface SettingsPanelProps {
+  showSettings: boolean;
+  onClose: () => void;
+  isAutoMode: boolean;
+  onAutoModeChange: (value: boolean) => void;
+  resolution: Resolution;
+  onResolutionChange: (value: Resolution) => void;
+  orientation: Orientation;
+  onOrientationChange: (value: Orientation) => void;
+  usersCount: number;
+  todaySuccessCount: number;
+  todayFailCount: number;
+  modelStatus: string;
+}
 
-  const [isAutoMode, setIsAutoMode] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-
+const SettingsPanel = memo(function SettingsPanel({
+  showSettings,
+  onClose,
+  isAutoMode,
+  onAutoModeChange,
+  resolution,
+  onResolutionChange,
+  orientation,
+  onOrientationChange,
+  usersCount,
+  todaySuccessCount,
+  todayFailCount,
+  modelStatus,
+}: SettingsPanelProps) {
   const settingsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const videoReadyRef = useRef(false);
-
-  // 상태 머신 훅 사용
-  const machine = useVerificationMachine({ autoMode: isAutoMode });
 
   // 설정 패널 자동 숨김
   useEffect(() => {
     if (showSettings) {
       settingsTimeoutRef.current = setTimeout(() => {
-        setShowSettings(false);
+        onClose();
       }, 10000);
     }
     return () => {
@@ -65,7 +84,158 @@ export function HomePage() {
         clearTimeout(settingsTimeoutRef.current);
       }
     };
-  }, [showSettings]);
+  }, [showSettings, onClose]);
+
+  if (!showSettings) return null;
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+         onClick={onClose}>
+      <div className="bg-gray-900 rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl"
+           onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-white">설정</h2>
+          <button
+            onClick={onClose}
+            className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mb-8">
+          <label className="block text-gray-400 text-lg mb-4">인증 모드</label>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => onAutoModeChange(false)}
+              className={`p-6 rounded-2xl text-center transition-all cursor-pointer ${
+                !isAutoMode
+                  ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              <svg className="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+              </svg>
+              <span className="text-xl font-medium">수동</span>
+              <p className="text-sm opacity-70 mt-1">버튼으로 인증</p>
+            </button>
+            <button
+              onClick={() => onAutoModeChange(true)}
+              disabled={usersCount === 0}
+              className={`p-6 rounded-2xl text-center transition-all cursor-pointer ${
+                isAutoMode
+                  ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              } ${usersCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <svg className="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span className="text-xl font-medium">자동</span>
+              <p className="text-sm opacity-70 mt-1">연속 인증</p>
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-6 mb-6">
+          {/* 해상도 선택 */}
+          <div>
+            <label className="block text-gray-400 text-lg mb-4">해상도</label>
+            <select
+              value={resolution}
+              onChange={(e) => onResolutionChange(e.target.value as Resolution)}
+              className="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
+            >
+              <option value="hd">1280x720 (HD)</option>
+              <option value="fhd">1920x1080 (FHD)</option>
+              <option value="qhd">2560x1440 (QHD)</option>
+            </select>
+          </div>
+
+          {/* 방향 선택 */}
+          <div>
+            <label className="block text-gray-400 text-lg mb-4">화면 방향</label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => onOrientationChange('landscape')}
+                className={`p-6 rounded-2xl text-center transition-all cursor-pointer ${
+                  orientation === 'landscape'
+                    ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                <span className="text-xl font-medium">가로</span>
+              </button>
+              <button
+                onClick={() => onOrientationChange('portrait')}
+                className={`p-6 rounded-2xl text-center transition-all cursor-pointer ${
+                  orientation === 'portrait'
+                    ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                <span className="text-xl font-medium">세로</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-2xl p-6 mb-6">
+          <h3 className="text-gray-400 mb-4">오늘의 통계</h3>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-3xl font-bold text-white">{usersCount}</p>
+              <p className="text-sm text-gray-500">등록 사용자</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-green-400">{todaySuccessCount}</p>
+              <p className="text-sm text-gray-500">승인</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-red-400">{todayFailCount}</p>
+              <p className="text-sm text-gray-500">거부</p>
+            </div>
+          </div>
+        </div>
+
+        <Link href="/register" className="block">
+          <button className="w-full p-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xl font-medium transition-colors flex items-center justify-center gap-3 cursor-pointer">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            사용자 등록
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+});
+
+type Resolution = 'hd' | 'fhd' | 'qhd';
+type Orientation = 'landscape' | 'portrait';
+
+const RESOLUTION_MAP = {
+  hd: { width: 1280, height: 720 },
+  fhd: { width: 1920, height: 1080 },
+  qhd: { width: 2560, height: 1440 },
+};
+
+export function HomePage() {
+  const { users, accessLogs, isHydrated, hydrate } = useUserStore();
+  const { modelStatus, initializeModels } = useFaceDetection();
+
+  const [isAutoMode, setIsAutoMode] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [resolution, setResolution] = useState<Resolution>('fhd');
+  const [orientation, setOrientation] = useState<Orientation>('landscape');
+
+  const videoReadyRef = useRef(false);
+
+  // 상태 머신 훅 사용
+  const machine = useVerificationMachine({ autoMode: isAutoMode });
 
   // 초기화
   useEffect(() => {
@@ -125,103 +295,33 @@ export function HomePage() {
   // 결과 데이터 (인라인 렌더링용)
   const verifyResult = machine.result;
 
-  // 설정 패널
-  const SettingsPanel = () => {
-    if (!showSettings) return null;
-
-    return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-           onClick={() => setShowSettings(false)}>
-        <div className="bg-gray-900 rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl"
-             onClick={e => e.stopPropagation()}>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-white">설정</h2>
-            <button
-              onClick={() => setShowSettings(false)}
-              className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="mb-8">
-            <label className="block text-gray-400 text-lg mb-4">인증 모드</label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setIsAutoMode(false)}
-                className={`p-6 rounded-2xl text-center transition-all ${
-                  !isAutoMode
-                    ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                <svg className="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                </svg>
-                <span className="text-xl font-medium">수동</span>
-                <p className="text-sm opacity-70 mt-1">버튼으로 인증</p>
-              </button>
-              <button
-                onClick={() => setIsAutoMode(true)}
-                disabled={users.length === 0}
-                className={`p-6 rounded-2xl text-center transition-all ${
-                  isAutoMode
-                    ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                } ${users.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <svg className="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span className="text-xl font-medium">자동</span>
-                <p className="text-sm opacity-70 mt-1">연속 인증</p>
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 rounded-2xl p-6 mb-6">
-            <h3 className="text-gray-400 mb-4">오늘의 통계</h3>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-3xl font-bold text-white">{users.length}</p>
-                <p className="text-sm text-gray-500">등록 사용자</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-green-400">{todaySuccessCount}</p>
-                <p className="text-sm text-gray-500">승인</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-red-400">{todayFailCount}</p>
-                <p className="text-sm text-gray-500">거부</p>
-              </div>
-            </div>
-          </div>
-
-          <Link href="/register" className="block">
-            <button className="w-full p-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xl font-medium transition-colors flex items-center justify-center gap-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-              사용자 등록
-            </button>
-          </Link>
-        </div>
-      </div>
-    );
-  };
+  // 디스플레이 크기 계산
+  const displaySize = RESOLUTION_MAP[resolution];
+  const displayWidth = orientation === 'landscape' ? displaySize.width : displaySize.height;
+  const displayHeight = orientation === 'landscape' ? displaySize.height : displaySize.width;
 
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden">
-      <CameraView
-        onVideoReady={handleVideoReady}
-        onVideoStop={handleStopVerification}
-        autoStart
-        showControls={false}
-        fullScreen
-        className="absolute inset-0 w-full h-full"
-      />
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 flex items-center justify-center p-8">
+      <div
+        className="shadow-2xl rounded-2xl overflow-hidden relative"
+        style={{
+          width: `${displayWidth}px`,
+          height: `${displayHeight}px`,
+          maxWidth: '95vw',
+          maxHeight: '95vh'
+        }}
+      >
+        <div className="w-full h-full bg-black overflow-hidden relative">
+          <CameraView
+            resolution={resolution}
+            orientation={orientation}
+            onVideoReady={handleVideoReady}
+            onVideoStop={handleStopVerification}
+            autoStart
+            showControls={false}
+            fullScreen
+            className="absolute inset-0 w-full h-full"
+          />
 
       {/* 상단 영역 */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4 portrait:p-6">
@@ -394,8 +494,23 @@ export function HomePage() {
           </div>
         </div>
       )}
+        </div>
+      </div>
 
-      <SettingsPanel />
+      <SettingsPanel
+        showSettings={showSettings}
+        onClose={() => setShowSettings(false)}
+        isAutoMode={isAutoMode}
+        onAutoModeChange={setIsAutoMode}
+        resolution={resolution}
+        onResolutionChange={setResolution}
+        orientation={orientation}
+        onOrientationChange={setOrientation}
+        usersCount={users.length}
+        todaySuccessCount={todaySuccessCount}
+        todayFailCount={todayFailCount}
+        modelStatus={modelStatus}
+      />
 
       <style jsx global>{`
         @keyframes scale-in {
