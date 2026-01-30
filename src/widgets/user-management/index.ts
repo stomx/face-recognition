@@ -1,1 +1,1 @@
-export { UserManagementPanel } from './ui';
+export { UserManagementPanel, UserFormModal } from './ui';

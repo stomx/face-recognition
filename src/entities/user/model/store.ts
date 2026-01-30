@@ -19,6 +19,7 @@ interface UserState {
   // Actions
   hydrate: () => void;
   addUser: (name: string, faceDescriptor: Float32Array, imageData?: string) => User;
+  updateUser: (id: string, name: string, faceDescriptor?: Float32Array, imageData?: string) => void;
   removeUser: (id: string) => void;
   getUserById: (id: string) => User | undefined;
   getLabeledDescriptors: () => faceapi.LabeledFaceDescriptors[];
@@ -56,6 +57,21 @@ export const useUserStore = create<UserState>((set, get) => ({
     saveUsers(updatedUsers);
 
     return newUser;
+  },
+
+  updateUser: (id, name, faceDescriptor, imageData) => {
+    const updatedUsers = get().users.map((user) =>
+      user.id === id
+        ? {
+            ...user,
+            name,
+            ...(faceDescriptor && { faceDescriptor }),
+            ...(imageData !== undefined && { imageData }),
+          }
+        : user
+    );
+    set({ users: updatedUsers });
+    saveUsers(updatedUsers);
   },
 
   removeUser: (id) => {

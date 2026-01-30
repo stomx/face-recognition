@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useUserStore } from '@/entities/user';
-import { ConfirmDialog } from '@/shared/ui';
+import { ConfirmDialog, PrimaryButton } from '@/shared/ui';
 import Link from 'next/link';
 
 export function UserManagementPanel() {
@@ -30,26 +30,32 @@ export function UserManagementPanel() {
 
   return (
     <>
-      <div className="bg-black/40 backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl border border-white/10">
-        <div className="p-5 border-b border-white/10 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">등록된 사용자</h2>
+      <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200">
+        <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">등록된 사용자</h2>
           <Link href="/register">
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
+            <PrimaryButton
+              onClick={() => {}}
+              variant="blue"
+              size="sm"
+              icon={
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              }
+            >
               사용자 등록
-            </button>
+            </PrimaryButton>
           </Link>
         </div>
         <div className="p-5 max-h-96 overflow-y-auto">
@@ -70,9 +76,9 @@ export function UserManagementPanel() {
               </svg>
               <p className="text-lg mb-4">등록된 사용자가 없습니다</p>
               <Link href="/register">
-                <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-blue-500/20">
+                <PrimaryButton onClick={() => {}} variant="blue" size="md">
                   첫 번째 사용자 등록하기
-                </button>
+                </PrimaryButton>
               </Link>
             </div>
           ) : (
@@ -81,11 +87,11 @@ export function UserManagementPanel() {
                 {users.map((user) => (
                   <div
                     key={user.id}
-                    className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all group"
+                    className="bg-gray-50 border border-gray-200 rounded-2xl p-4 hover:bg-gray-100 transition-all group"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-white text-lg mb-1">
+                        <h3 className="font-semibold text-gray-900 text-lg mb-1">
                           {user.name}
                         </h3>
                         <p className="text-xs text-gray-500">
@@ -114,7 +120,7 @@ export function UserManagementPanel() {
                     </div>
 
                     {user.imageData && (
-                      <div className="aspect-square rounded-xl overflow-hidden bg-gray-900 border border-white/10">
+                      <div className="aspect-square rounded-xl overflow-hidden bg-gray-200 border border-gray-300">
                         <img
                           src={user.imageData}
                           alt={user.name}
@@ -124,7 +130,7 @@ export function UserManagementPanel() {
                     )}
 
                     {!user.imageData && (
-                      <div className="aspect-square rounded-xl bg-gray-900 border border-white/10 flex items-center justify-center">
+                      <div className="aspect-square rounded-xl bg-gray-200 border border-gray-300 flex items-center justify-center">
                         <svg
                           className="w-16 h-16 text-gray-700"
                           fill="none"
@@ -144,9 +150,9 @@ export function UserManagementPanel() {
                 ))}
               </div>
 
-              <div className="mt-6 pt-5 border-t border-white/10 text-center">
-                <p className="text-sm text-gray-500">
-                  총 <span className="text-blue-400 font-bold">{users.length}</span>명의 사용자가 등록되어 있습니다
+              <div className="mt-6 pt-5 border-t border-gray-200 text-center">
+                <p className="text-sm text-gray-600">
+                  총 <span className="text-blue-600 font-bold">{users.length}</span>명의 사용자가 등록되어 있습니다
                 </p>
               </div>
             </>

@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import { Card, CardBody, Button } from '@/shared/ui';
 import { CAMERA_CONFIG } from '@/shared/config/constants';
 
-type Resolution = '480p' | '720p' | '1080p';
+type Resolution = 'hd' | 'fhd' | 'qhd';
 type Orientation = 'landscape' | 'portrait';
 
 interface CameraViewProps {
@@ -19,9 +19,9 @@ interface CameraViewProps {
 }
 
 const RESOLUTION_MAP = {
-  '480p': { width: 640, height: 480 },
-  '720p': { width: 1280, height: 720 },
-  '1080p': { width: 1920, height: 1080 },
+  hd: { width: 1280, height: 720 },
+  fhd: { width: 1920, height: 1080 },
+  qhd: { width: 2560, height: 1440 },
 };
 
 export function CameraView({
@@ -31,7 +31,7 @@ export function CameraView({
   autoStart = false,
   className = '',
   fullScreen = false,
-  resolution = '720p',
+  resolution = 'fhd',
   orientation = 'landscape',
 }: CameraViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -198,10 +198,10 @@ export function CameraView({
 
   // 일반 모드 - Card 래퍼 포함
   return (
-    <Card className={`overflow-hidden ${className}`}>
-      <CardBody className="p-0 relative">
+    <div className={`overflow-hidden h-full ${className}`}>
+      <div className="p-0 relative h-full">
         {/* 비디오 컨테이너 - 적응형 */}
-        <div className="relative aspect-video bg-gray-900">
+        <div className="relative h-full w-full bg-gray-900">
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
@@ -314,7 +314,7 @@ export function CameraView({
             )}
           </div>
         )}
-      </CardBody>
-    </Card>
+      </div>
+    </div>
   );
 }
