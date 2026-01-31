@@ -6,7 +6,14 @@ import type { DashboardLayoutProps } from './types';
 /**
  * Dashboard 세로 모드 레이아웃
  */
-export function PortraitLayout(props: DashboardLayoutProps) {
+export function PortraitLayout({
+  camera,
+  authentication,
+  stats,
+  system,
+  data,
+}: DashboardLayoutProps) {
+  // Props 그룹 destructuring
   const {
     resolution,
     orientation,
@@ -16,15 +23,15 @@ export function PortraitLayout(props: DashboardLayoutProps) {
     onCameraToggle,
     onResolutionChange,
     onOrientationChange,
-    isAuthenticating,
-    onManualAuth,
-    usersCount,
-    todaySuccessCount,
-    todayFailCount,
-    modelStatus,
-    onNavigateHome,
-    accessLogs,
-  } = props;
+  } = camera;
+
+  const { isAuthenticating, onManualAuth } = authentication;
+
+  const { usersCount, todaySuccessCount, todayFailCount } = stats;
+
+  const { modelStatus, onNavigateHome } = system;
+
+  const { accessLogs } = data;
 
   return (
     <div className="flex flex-col h-full relative bg-white">

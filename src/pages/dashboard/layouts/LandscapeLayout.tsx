@@ -6,7 +6,14 @@ import type { DashboardLayoutProps } from './types';
 /**
  * Dashboard 가로 모드 레이아웃
  */
-export function LandscapeLayout(props: DashboardLayoutProps) {
+export function LandscapeLayout({
+  camera,
+  authentication,
+  stats,
+  system,
+  data,
+}: DashboardLayoutProps) {
+  // Props 그룹 destructuring
   const {
     resolution,
     orientation,
@@ -16,16 +23,15 @@ export function LandscapeLayout(props: DashboardLayoutProps) {
     onCameraToggle,
     onResolutionChange,
     onOrientationChange,
-    isAuthenticating,
-    onManualAuth,
-    usersCount,
-    todaySuccessCount,
-    todayFailCount,
-    modelStatus,
-    onAddUser,
-    onNavigateHome,
-    accessLogs,
-  } = props;
+  } = camera;
+
+  const { isAuthenticating, onManualAuth } = authentication;
+
+  const { usersCount, todaySuccessCount, todayFailCount } = stats;
+
+  const { modelStatus, onAddUser, onNavigateHome } = system;
+
+  const { accessLogs } = data;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

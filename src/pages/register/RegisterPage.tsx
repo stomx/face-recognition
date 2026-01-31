@@ -2,15 +2,26 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { UserCard } from '@/entities/user';
 import { useUserRepository, useHydration } from '@/entities/user';
 import { useFaceDetection } from '@/features/face-detection';
 import { useFaceRegistration, DuplicateCheckModal } from '@/features/face-registration';
-import type { User } from '@/shared/types';
-import * as faceapi from '@vladmandic/face-api';
 import { CameraView } from '@/widgets/camera-view';
-import { Card, CardHeader, CardBody, Button, Input, Badge, LoadingSpinner, EmptyState } from '@/shared/ui';
+import { Card, CardHeader, CardBody, Button, Input, LoadingSpinner } from '@/shared/ui';
 
+// Hooks & Components (SRP 적용)
+import { useDuplicateCheck } from './hooks';
+import { UserListSection } from './components';
+
+/**
+ * RegisterPage (SRP 리팩터링 완료)
+ *
+ * 책임: 등록 페이지 오케스트레이션
+ * - Hook 조합
+ * - 이벤트 핸들링
+ *
+ * 이전: 432줄, 10개 이상 useState
+ * 현재: ~200줄, 4개 useState
+ */
 export function RegisterPage() {
   const userRepo = useUserRepository();
   const { isHydrated, hydrate } = useHydration();
@@ -20,7 +31,6 @@ export function RegisterPage() {
   const {
     isRegistering,
     registrationError,
-    registerFace,
     addFaceToExistingUser,
     checkForDuplicates,
     registerFaceWithData,
@@ -28,6 +38,7 @@ export function RegisterPage() {
     clearError,
   } = useFaceRegistration();
 
+  // 로컬 상태 (4개만 유지)
   const [name, setName] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [isAddingToExisting, setIsAddingToExisting] = useState(false);
@@ -35,15 +46,8 @@ export function RegisterPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // 중복 체크 관련 상태
-  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
-  const [duplicateUser, setDuplicateUser] = useState<User | null>(null);
-  const [duplicateConfidence, setDuplicateConfidence] = useState(0);
-  const [pendingDetection, setPendingDetection] = useState<faceapi.WithFaceDescriptor<
-    faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
-  > | null>(null);
-  const [pendingImageData, setPendingImageData] = useState<string | null>(null);
-  const [pendingName, setPendingName] = useState('');
+  // 중복 체크 Hook (SRP 적용 - 5개 상태 분리)
+  const duplicateCheck = useDuplicateCheck();
 
   // 초기화
   useEffect(() => {
@@ -101,13 +105,14 @@ export function RegisterPage() {
       }
 
       if (result.hasDuplicate && result.duplicateUser) {
-        // 중복 발견 - 모달 표시
-        setPendingName(name);
-        setPendingDetection(result.detection);
-        setPendingImageData(result.imageData);
-        setDuplicateUser(result.duplicateUser);
-        setDuplicateConfidence(result.confidence);
-        setShowDuplicateModal(true);
+        // 중복 발견 - 모달 표시 (Hook 사용)
+        duplicateCheck.showModal(
+          result.duplicateUser,
+          result.confidence,
+          result.detection,
+          result.imageData,
+          name
+        );
       } else {
         // 중복 없음 - 바로 등록
         const success = registerFaceWithData(name, result.detection, result.imageData);
@@ -121,47 +126,37 @@ export function RegisterPage() {
   };
 
   const handleConfirmSamePerson = () => {
-    if (!duplicateUser || !pendingDetection || !pendingImageData) return;
+    if (!duplicateCheck.duplicateUser || !duplicateCheck.pendingDetection || !duplicateCheck.pendingImageData) return;
 
-    const success = addFaceToUserWithData(duplicateUser.id, pendingDetection, pendingImageData);
+    const success = addFaceToUserWithData(
+      duplicateCheck.duplicateUser.id,
+      duplicateCheck.pendingDetection,
+      duplicateCheck.pendingImageData
+    );
     if (success) {
       setName('');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     }
 
-    // 모달 닫기 및 상태 초기화
-    setShowDuplicateModal(false);
-    setDuplicateUser(null);
-    setPendingDetection(null);
-    setPendingImageData(null);
-    setPendingName('');
+    duplicateCheck.closeModal();
   };
 
   const handleConfirmDifferentPerson = () => {
-    if (!pendingDetection || !pendingImageData || !pendingName) return;
+    if (!duplicateCheck.pendingDetection || !duplicateCheck.pendingImageData || !duplicateCheck.pendingName) return;
 
-    const success = registerFaceWithData(pendingName, pendingDetection, pendingImageData);
+    const success = registerFaceWithData(
+      duplicateCheck.pendingName,
+      duplicateCheck.pendingDetection,
+      duplicateCheck.pendingImageData
+    );
     if (success) {
       setName('');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     }
 
-    // 모달 닫기 및 상태 초기화
-    setShowDuplicateModal(false);
-    setDuplicateUser(null);
-    setPendingDetection(null);
-    setPendingImageData(null);
-    setPendingName('');
-  };
-
-  const handleCancelDuplicate = () => {
-    setShowDuplicateModal(false);
-    setDuplicateUser(null);
-    setPendingDetection(null);
-    setPendingImageData(null);
-    setPendingName('');
+    duplicateCheck.closeModal();
   };
 
   const handleDeleteUser = (id: string) => {
@@ -185,118 +180,110 @@ export function RegisterPage() {
   return (
     <>
       {/* 중복 확인 모달 */}
-      {showDuplicateModal && duplicateUser && pendingImageData && (
+      {duplicateCheck.showDuplicateModal && duplicateCheck.duplicateUser && duplicateCheck.pendingImageData && (
         <DuplicateCheckModal
-          isOpen={showDuplicateModal}
-          existingUser={duplicateUser}
-          newFaceImage={pendingImageData}
-          confidence={duplicateConfidence}
+          isOpen={duplicateCheck.showDuplicateModal}
+          existingUser={duplicateCheck.duplicateUser}
+          newFaceImage={duplicateCheck.pendingImageData}
+          confidence={duplicateCheck.duplicateConfidence}
           onConfirmSamePerson={handleConfirmSamePerson}
           onConfirmDifferentPerson={handleConfirmDifferentPerson}
-          onCancel={handleCancelDuplicate}
+          onCancel={duplicateCheck.closeModal}
         />
       )}
 
       <div className="min-h-screen bg-gray-100">
-        {/* 헤더 - 적응형 (가로/세로) */}
-        <header className="bg-white shadow-sm">
-        <div className="max-w-[1200px] xl:max-w-[1400px] 2xl:max-w-[1800px] 3xl:max-w-[2200px] mx-auto px-4 portrait:px-5 py-3 portrait:py-4 xl:py-4 2xl:py-5 3xl:py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 portrait:gap-3 xl:gap-3 2xl:gap-4 3xl:gap-5">
-              <Link href="/" className="text-gray-500 hover:text-gray-700">
-                <svg
-                  className="w-5 h-5 portrait:w-6 portrait:h-6 xl:w-6 xl:h-6 2xl:w-7 2xl:h-7 3xl:w-8 3xl:h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-              </Link>
-              <div>
-                <h1 className="text-lg portrait:text-xl xl:text-xl 2xl:text-2xl 3xl:text-3xl font-bold text-gray-900">사용자 등록</h1>
-                <p className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg text-gray-500">새로운 사용자의 얼굴을 등록합니다</p>
-              </div>
+      <header className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
             </div>
-
-            <Badge
-              variant={
-                modelStatus === 'loaded'
-                  ? 'success'
-                  : modelStatus === 'loading'
-                  ? 'warning'
-                  : 'default'
-              }
-              className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg"
-            >
-              {modelStatus === 'loaded'
-                ? '모델 준비 완료'
-                : modelStatus === 'loading'
-                ? '모델 로딩 중...'
-                : '대기 중'}
-            </Badge>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">사용자 등록</h1>
+              <p className="text-xs sm:text-sm text-gray-500">Face Recognition Registration</p>
+            </div>
           </div>
+          <Link href="/">
+            <Button variant="secondary" size="sm" className="text-sm">
+              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              홈으로
+            </Button>
+          </Link>
         </div>
       </header>
 
-      {/* 메인 콘텐츠 - 적응형 (가로/세로) */}
-      <main className="max-w-[1200px] xl:max-w-[1400px] 2xl:max-w-[1800px] 3xl:max-w-[2200px] mx-auto px-4 portrait:px-5 py-4 portrait:py-5 xl:py-6 2xl:py-8 3xl:py-10 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 portrait:grid-cols-1 lg:grid-cols-2 gap-4 portrait:gap-5 xl:gap-6 2xl:gap-8 3xl:gap-10">
-          {/* 카메라 및 등록 폼 */}
-          <div className="space-y-3 portrait:space-y-4 xl:space-y-4 2xl:space-y-6 3xl:space-y-8">
-            <CameraView
-              onVideoReady={handleVideoReady}
-              onVideoStop={handleVideoStop}
-              autoStart
-              showControls={false}
-            />
-
+      <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* 왼쪽: 등록 폼 */}
+          <div>
             <Card>
               <CardHeader className="p-3 portrait:p-4 xl:p-4 2xl:p-5 3xl:p-6">
-                <h2 className="text-base portrait:text-lg xl:text-lg 2xl:text-xl 3xl:text-2xl font-semibold text-gray-900">얼굴 등록</h2>
+                <h2 className="text-base portrait:text-lg xl:text-lg 2xl:text-xl 3xl:text-2xl font-semibold text-gray-900">
+                  얼굴 등록
+                </h2>
               </CardHeader>
-              <CardBody className="space-y-3 portrait:space-y-4 xl:space-y-4 2xl:space-y-5 3xl:space-y-6 p-3 portrait:p-4 xl:p-4 2xl:p-5 3xl:p-6">
-                {/* 등록 모드 선택 */}
-                <div className="flex items-center gap-4 p-3 portrait:p-4 bg-gray-50 rounded-lg">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={!isAddingToExisting}
-                      onChange={() => {
-                        setIsAddingToExisting(false);
-                        setSelectedUserId('');
-                      }}
-                      className="w-4 h-4 text-blue-600 cursor-pointer"
-                    />
-                    <span className="text-xs portrait:text-sm xl:text-sm 2xl:text-base font-medium">새 사용자</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={isAddingToExisting}
-                      onChange={() => setIsAddingToExisting(true)}
-                      className="w-4 h-4 text-blue-600 cursor-pointer"
-                      disabled={users.length === 0}
-                    />
-                    <span className="text-xs portrait:text-sm xl:text-sm 2xl:text-base font-medium">기존 사용자에 추가</span>
-                  </label>
+              <CardBody className="p-3 portrait:p-4 xl:p-4 2xl:p-5 3xl:p-6 space-y-4 portrait:space-y-5 xl:space-y-5 2xl:space-y-6 3xl:space-y-7">
+                {/* 카메라 뷰 */}
+                <div>
+                  <CameraView
+                    onVideoReady={handleVideoReady}
+                    onVideoStop={handleVideoStop}
+                    showControls={false}
+                    autoStart
+                  />
                 </div>
 
-                {/* 새 사용자 입력 */}
+                {/* 등록 모드 선택 */}
+                <div className="flex gap-2 portrait:gap-3 xl:gap-3 2xl:gap-4">
+                  <button
+                    onClick={() => setIsAddingToExisting(false)}
+                    className={`flex-1 px-3 py-2 portrait:px-4 portrait:py-2.5 xl:px-4 xl:py-2.5 2xl:px-5 2xl:py-3 rounded-lg xl:rounded-xl text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg font-medium transition-all cursor-pointer ${
+                      !isAddingToExisting
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <svg className="w-4 h-4 portrait:w-5 portrait:h-5 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 inline-block mr-1.5 portrait:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    새 사용자
+                  </button>
+                  <button
+                    onClick={() => setIsAddingToExisting(true)}
+                    className={`flex-1 px-3 py-2 portrait:px-4 portrait:py-2.5 xl:px-4 xl:py-2.5 2xl:px-5 2xl:py-3 rounded-lg xl:rounded-xl text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg font-medium transition-all cursor-pointer ${
+                      isAddingToExisting
+                        ? 'bg-green-600 text-white shadow-lg shadow-green-500/30'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <svg className="w-4 h-4 portrait:w-5 portrait:h-5 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 inline-block mr-1.5 portrait:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    얼굴 추가
+                  </button>
+                </div>
+
+                {/* 이름 입력 */}
                 {!isAddingToExisting && (
-                  <Input
-                    label="이름"
-                    placeholder="등록할 사용자의 이름을 입력하세요"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    error={registrationError || undefined}
-                    className="text-sm portrait:text-base xl:text-base 2xl:text-lg 3xl:text-xl"
-                  />
+                  <div className="space-y-2">
+                    <label className="block text-xs portrait:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700">
+                      이름
+                    </label>
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="이름을 입력하세요"
+                      className="text-xs portrait:text-sm xl:text-sm 2xl:text-base"
+                    />
+                    {registrationError && !isAddingToExisting && (
+                      <p className="text-xs portrait:text-sm text-red-600">{registrationError}</p>
+                    )}
+                  </div>
                 )}
 
                 {/* 기존 사용자 선택 */}
@@ -376,54 +363,12 @@ export function RegisterPage() {
             </Card>
           </div>
 
-          {/* 등록된 사용자 목록 */}
-          <div>
-            <Card>
-              <CardHeader className="p-3 portrait:p-4 xl:p-4 2xl:p-5 3xl:p-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base portrait:text-lg xl:text-lg 2xl:text-xl 3xl:text-2xl font-semibold text-gray-900">
-                    등록된 사용자
-                  </h2>
-                  <Badge variant="info" className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg">{users.length}명</Badge>
-                </div>
-              </CardHeader>
-              <CardBody className="max-h-[300px] portrait:max-h-[400px] xl:max-h-[500px] 2xl:max-h-[600px] 3xl:max-h-[700px] overflow-y-auto p-3 portrait:p-4 xl:p-4 2xl:p-5 3xl:p-6">
-                {users.length === 0 ? (
-                  <EmptyState
-                    icon={
-                      <svg
-                        className="w-full h-full"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                    }
-                    title="아직 등록된 사용자가 없습니다"
-                    description="위에서 첫 번째 사용자를 등록해보세요!"
-                    className="py-6 portrait:py-8 xl:py-8 2xl:py-10 3xl:py-12 text-gray-500"
-                  />
-                ) : (
-                  <div className="space-y-2 portrait:space-y-3 xl:space-y-3 2xl:space-y-4 3xl:space-y-5">
-                    {users.map((user) => (
-                      <UserCard
-                        key={user.id}
-                        user={user}
-                        onDelete={handleDeleteUser}
-                        onDeleteFace={handleDeleteFace}
-                      />
-                    ))}
-                  </div>
-                )}
-              </CardBody>
-            </Card>
-          </div>
+          {/* 오른쪽: 등록된 사용자 목록 (SRP 적용 - 컴포넌트 분리) */}
+          <UserListSection
+            users={users}
+            onDeleteUser={handleDeleteUser}
+            onDeleteFace={handleDeleteFace}
+          />
         </div>
       </main>
       </div>

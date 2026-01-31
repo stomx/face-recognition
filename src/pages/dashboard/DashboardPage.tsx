@@ -58,36 +58,39 @@ export function DashboardPage() {
     setEditingUser(undefined);
   };
 
-  // Layout Props 구성
+  // Layout Props 구성 (ISP 원칙 적용 - 5개 그룹)
   const layoutProps = {
-    // 카메라
-    resolution: camera.resolution,
-    orientation: camera.orientation,
-    isCameraOn: camera.isCameraOn,
-    onVideoReady: camera.handleVideoReady,
-    onVideoStop: camera.handleVideoStop,
-    onCameraToggle: camera.handleCameraToggle,
-    onResolutionChange: camera.handleResolutionChange,
-    onOrientationChange: camera.handleOrientationChange,
+    camera: {
+      resolution: camera.resolution,
+      orientation: camera.orientation,
+      isCameraOn: camera.isCameraOn,
+      onVideoReady: camera.handleVideoReady,
+      onVideoStop: camera.handleVideoStop,
+      onCameraToggle: camera.handleCameraToggle,
+      onResolutionChange: camera.handleResolutionChange,
+      onOrientationChange: camera.handleOrientationChange,
+    },
 
-    // 인증
-    isAuthenticating: auth.isAuthenticating,
-    onManualAuth: auth.handleManualAuth,
+    authentication: {
+      isAuthenticating: auth.isAuthenticating,
+      onManualAuth: auth.handleManualAuth,
+    },
 
-    // 통계
-    usersCount: stats.usersCount,
-    todaySuccessCount: stats.todaySuccessCount,
-    todayFailCount: stats.todayFailCount,
+    stats: {
+      usersCount: stats.usersCount,
+      todaySuccessCount: stats.todaySuccessCount,
+      todayFailCount: stats.todayFailCount,
+    },
 
-    // 시스템
-    modelStatus,
+    system: {
+      modelStatus,
+      onAddUser: handleAddUser,
+      onNavigateHome: () => router.push('/'),
+    },
 
-    // 사용자 관리
-    onAddUser: handleAddUser,
-    onNavigateHome: () => router.push('/'),
-
-    // 출입 기록
-    accessLogs: accessLogRepo.getAll(),
+    data: {
+      accessLogs: accessLogRepo.getAll(),
+    },
   };
 
   // 디스플레이 크기 계산
