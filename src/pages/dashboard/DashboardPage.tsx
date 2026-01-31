@@ -9,6 +9,7 @@ import { AccessLogTimeline } from '@/widgets/access-log';
 import { UserManagementPanel, UserFormModal } from '@/widgets/user-management';
 import { useFaceDetection } from '@/features/face-detection';
 import { loadModels, detectFace, findBestMatch, faceapi } from '@/shared/lib/face-api';
+import { FACE_DETECTION_CONFIG } from '@/shared/config/constants';
 import { ResultOverlay, StatusBadge, IconButton, StatCounter, PrimaryButton, StatsGrid, StatCard, EmptyState } from '@/shared/ui';
 import type { User } from '@/shared/types';
 
@@ -104,24 +105,33 @@ export function DashboardPage() {
       const labeledDescriptors = getLabeledDescriptors();
       const bestMatch = findBestMatch(detection.descriptor, labeledDescriptors);
 
-      if (!bestMatch || bestMatch.label === 'unknown') {
-        const confidence = bestMatch ? 1 - bestMatch.distance : 0;
-        addAccessLog(null, '미확인 사용자', 'failed', confidence);
-        setResult({
-          type: 'failed',
-          confidence,
-          message: '등록되지 않은 얼굴입니다',
-        });
-      } else {
-        const user = getUserById(bestMatch.label);
+      // 일치율 계산
+      const confidence = bestMatch ? 1 - bestMatch.distance : 0;
+      const isMatch = bestMatch != null && bestMatch.label !== 'unknown';
+
+      // ⭐ MATCH_THRESHOLD 체크 - HomePage와 동일한 로직
+      const isVerified = isMatch && confidence >= (1 - FACE_DETECTION_CONFIG.MATCH_THRESHOLD);
+
+      if (isVerified) {
+        // 인증 성공
+        const user = getUserById(bestMatch!.label);
         const userName = user?.name || '알 수 없음';
-        const confidence = 1 - bestMatch.distance;
-        addAccessLog(bestMatch.label, userName, 'success', confidence);
+        addAccessLog(bestMatch!.label, userName, 'success', confidence);
         setResult({
           type: 'success',
           userName,
           confidence,
           message: '인증 성공',
+        });
+      } else {
+        // 인증 실패
+        addAccessLog(null, '미확인 사용자', 'failed', confidence);
+        setResult({
+          type: 'failed',
+          confidence,
+          message: confidence > 0
+            ? `일치율 부족 (${Math.round(confidence * 100)}%)`
+            : '등록되지 않은 얼굴입니다',
         });
       }
     } catch (error) {
