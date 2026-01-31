@@ -24,7 +24,7 @@ interface ResultState {
 
 export function DashboardPage() {
   const router = useRouter();
-  const { users, addUser, updateUser, removeUser, addFaceToUser, addAccessLog, accessLogs, hydrate, isHydrated, getLabeledDescriptors, getUserById } = useUserStore();
+  const { users, removeUser, addAccessLog, accessLogs, hydrate, isHydrated, getLabeledDescriptors, getUserById } = useUserStore();
   const { modelStatus, initializeModels } = useFaceDetection();
 
   const [resolution, setResolution] = useState<Resolution>('fhd');
@@ -156,20 +156,8 @@ export function DashboardPage() {
     }
   };
 
-  const handleSaveUser = (name: string, faceDescriptor: Float32Array, imageData: string) => {
-    if (editingUser) {
-      updateUser(editingUser.id, name, faceDescriptor, imageData);
-    } else {
-      // 새 사용자 등록 시 동일 이름 확인
-      const existingUser = users.find(u => u.name === name);
-      if (existingUser) {
-        // 동일 이름 사용자가 있으면 얼굴 추가
-        addFaceToUser(existingUser.id, faceDescriptor, imageData);
-      } else {
-        // 없으면 새 사용자로 등록
-        addUser(name, faceDescriptor, imageData);
-      }
-    }
+  const handleUserSaveSuccess = () => {
+    // 사용자 등록/수정 성공
     setShowUserModal(false);
     setEditingUser(undefined);
   };
@@ -684,7 +672,7 @@ export function DashboardPage() {
         <UserFormModal
           user={editingUser}
           modelStatus={modelStatus}
-          onSave={handleSaveUser}
+          onSuccess={handleUserSaveSuccess}
           onClose={() => {
             setShowUserModal(false);
             setEditingUser(undefined);

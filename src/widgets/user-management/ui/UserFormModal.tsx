@@ -4,18 +4,26 @@ import { useState, useRef, useCallback } from 'react';
 import { CameraView } from '@/widgets/camera-view';
 import { PrimaryButton } from '@/shared/ui';
 import { useFaceRegistration, DuplicateCheckModal } from '@/features/face-registration';
+import { useUserStore } from '@/entities/user';
 import type { User } from '@/shared/types';
 import * as faceapi from '@vladmandic/face-api';
 
 interface UserFormModalProps {
   user?: User;
   modelStatus: 'idle' | 'loading' | 'loaded' | 'error';
-  onSave: (name: string, faceDescriptor: Float32Array, imageData: string) => void;
+  onSuccess: () => void; // 저장 성공 시 콜백
   onClose: () => void;
 }
 
-export function UserFormModal({ user, modelStatus, onSave, onClose }: UserFormModalProps) {
-  const { isRegistering, registrationError, checkForDuplicates } = useFaceRegistration();
+export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFormModalProps) {
+  const {
+    isRegistering,
+    registrationError,
+    checkForDuplicates,
+    registerFaceWithData,
+    addFaceToUserWithData,
+  } = useFaceRegistration();
+  const { updateUser, getUserByName } = useUserStore();
 
   const [name, setName] = useState(user?.name || '');
   const [isCameraOn, setIsCameraOn] = useState(true);
@@ -119,32 +127,39 @@ export function UserFormModal({ user, modelStatus, onSave, onClose }: UserFormMo
   const handleConfirmSamePerson = () => {
     if (!duplicateUser || !pendingDetection || !pendingImageData) return;
 
-    // 기존 사용자에 얼굴 추가 - 부모 컴포넌트에 알림
-    setCapturedImage(pendingImageData);
-    setCapturedDescriptor(pendingDetection.descriptor);
-    setName(duplicateUser.name); // 기존 사용자 이름으로 설정
-    setIsCameraOn(false);
+    // 기존 사용자에 얼굴 추가
+    const success = addFaceToUserWithData(duplicateUser.id, pendingDetection, pendingImageData);
 
-    // 모달 닫기 및 상태 초기화
-    setShowDuplicateModal(false);
-    setDuplicateUser(null);
-    setPendingDetection(null);
-    setPendingImageData(null);
+    if (success) {
+      // 모달 닫기 및 상태 초기화
+      setShowDuplicateModal(false);
+      setDuplicateUser(null);
+      setPendingDetection(null);
+      setPendingImageData(null);
+
+      // 성공 알림 후 모달 닫기
+      onSuccess();
+      onClose();
+    }
   };
 
   const handleConfirmDifferentPerson = () => {
-    if (!pendingDetection || !pendingImageData) return;
+    if (!pendingDetection || !pendingImageData || !name.trim()) return;
 
     // 새 사용자로 등록
-    setCapturedImage(pendingImageData);
-    setCapturedDescriptor(pendingDetection.descriptor);
-    setIsCameraOn(false);
+    const success = registerFaceWithData(name.trim(), pendingDetection, pendingImageData);
 
-    // 모달 닫기 및 상태 초기화
-    setShowDuplicateModal(false);
-    setDuplicateUser(null);
-    setPendingDetection(null);
-    setPendingImageData(null);
+    if (success) {
+      // 모달 닫기 및 상태 초기화
+      setShowDuplicateModal(false);
+      setDuplicateUser(null);
+      setPendingDetection(null);
+      setPendingImageData(null);
+
+      // 성공 알림 후 모달 닫기
+      onSuccess();
+      onClose();
+    }
   };
 
   const handleCancelDuplicate = () => {
@@ -170,7 +185,38 @@ export function UserFormModal({ user, modelStatus, onSave, onClose }: UserFormMo
       return;
     }
 
-    onSave(name.trim(), capturedDescriptor, capturedImage);
+    let success = false;
+
+    if (user) {
+      // 기존 사용자 수정
+      updateUser(user.id, name.trim(), capturedDescriptor, capturedImage);
+      success = true;
+    } else {
+      // 새 사용자 등록 - 동일 이름 확인
+      const existingUser = getUserByName(name.trim());
+      if (existingUser) {
+        // 동일 이름 사용자가 있으면 얼굴 추가
+        const detection = {
+          descriptor: capturedDescriptor,
+        } as faceapi.WithFaceDescriptor<
+          faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
+        >;
+        success = addFaceToUserWithData(existingUser.id, detection, capturedImage);
+      } else {
+        // 없으면 새 사용자로 등록
+        const detection = {
+          descriptor: capturedDescriptor,
+        } as faceapi.WithFaceDescriptor<
+          faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
+        >;
+        success = registerFaceWithData(name.trim(), detection, capturedImage);
+      }
+    }
+
+    if (success) {
+      onSuccess();
+      onClose();
+    }
   };
 
   return (
