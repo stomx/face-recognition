@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { CameraView } from '@/widgets/camera-view';
 import { PrimaryButton } from '@/shared/ui';
 import { useFaceRegistration, DuplicateCheckModal } from '@/features/face-registration';
 import { useUserRepository } from '@/entities/user';
 import type { User } from '@/shared/types';
+import type { IUserRepository } from '@/shared/types/repository';
+import type { IUserFormStrategy } from '../strategies';
+import { CreateUserStrategy, UpdateUserStrategy } from '../strategies';
 import * as faceapi from '@vladmandic/face-api';
 
 // Hooks
@@ -19,20 +22,28 @@ interface UserFormModalProps {
 }
 
 /**
- * 사용자 등록/수정 모달 (리팩터링 완료)
+ * 사용자 등록/수정 모달 (OCP 원칙 적용)
  *
  * 책임: UI 렌더링 및 이벤트 조율
  * - Hook 조합
- * - 폼 제출 처리
+ * - 전략 패턴으로 등록/수정 로직 분리 (OCP)
  *
- * 이전: 342줄 (8개 useState, 5가지 책임)
- * 현재: ~150줄 (조율만)
+ * 이전: 342줄 (8개 useState, 5가지 책임, if-else 분기)
+ * 현재: ~150줄 (조율만, 전략 패턴)
  */
 export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFormModalProps) {
   const { registerFaceWithData, addFaceToUserWithData } = useFaceRegistration();
-  const userRepo = useUserRepository();
+  const userRepo: IUserRepository = useUserRepository();
 
   const [name, setName] = useState(user?.name || '');
+
+  // 전략 패턴: 등록/수정 모드에 따라 전략 선택 (OCP)
+  const strategy: IUserFormStrategy = useMemo(() => {
+    if (user) {
+      return new UpdateUserStrategy(user.id, userRepo);
+    }
+    return new CreateUserStrategy(userRepo, registerFaceWithData, addFaceToUserWithData);
+  }, [user, userRepo, registerFaceWithData, addFaceToUserWithData]);
 
   // 분리된 Hook들
   const camera = useUserFormCamera();
@@ -82,7 +93,7 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
     camera.turnOnCamera();
   };
 
-  // 폼 제출
+  // 폼 제출 (전략 패턴 사용)
   const handleSubmit = () => {
     if (!name.trim()) {
       return;
@@ -92,33 +103,12 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
       return;
     }
 
-    let success = false;
-
-    if (user) {
-      // 기존 사용자 수정
-      userRepo.update(user.id, name.trim(), capture.capturedDescriptor, capture.capturedImage);
-      success = true;
-    } else {
-      // 새 사용자 등록 - 동일 이름 확인
-      const existingUser = userRepo.getByName(name.trim());
-      if (existingUser) {
-        // 동일 이름 사용자가 있으면 얼굴 추가
-        const detection = {
-          descriptor: capture.capturedDescriptor,
-        } as faceapi.WithFaceDescriptor<
-          faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
-        >;
-        success = addFaceToUserWithData(existingUser.id, detection, capture.capturedImage);
-      } else {
-        // 없으면 새 사용자로 등록
-        const detection = {
-          descriptor: capture.capturedDescriptor,
-        } as faceapi.WithFaceDescriptor<
-          faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
-        >;
-        success = registerFaceWithData(name.trim(), detection, capture.capturedImage);
-      }
-    }
+    // 전략 패턴: 등록/수정 로직을 전략에 위임 (OCP)
+    const success = strategy.submit({
+      name: name.trim(),
+      descriptor: capture.capturedDescriptor,
+      imageData: capture.capturedImage,
+    });
 
     if (success) {
       onSuccess();
@@ -145,9 +135,7 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
         <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           {/* 헤더 */}
           <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {user ? '사용자 수정' : '사용자 등록'}
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900">{strategy.getTitle()}</h2>
             <button
               onClick={onClose}
               className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors"
@@ -239,7 +227,7 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
               className="flex-1"
               disabled={!name.trim() || !capture.capturedDescriptor}
             >
-              {user ? '수정' : '등록'}
+              {strategy.getButtonLabel()}
             </PrimaryButton>
           </div>
         </div>
