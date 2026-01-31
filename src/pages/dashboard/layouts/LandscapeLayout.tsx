@@ -67,7 +67,7 @@ export function LandscapeLayout({
         </div>
 
         {/* 우측: 출입 기록 */}
-        <div className="w-72 hd-l:w-80 fhd-l:w-80 qhd-l:w-96 flex flex-col">
+        <div className="w-80 hd-l:w-96 fhd-l:w-96 qhd-l:w-[28rem] flex flex-col">
           <AccessLogSection accessLogs={accessLogs} />
         </div>
       </div>
