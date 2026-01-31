@@ -52,8 +52,8 @@ export function LandscapeLayout({
       {/* 메인 콘텐츠 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 좌측: 카메라 */}
-        <div className="flex-1 bg-gray-900 flex items-center justify-center p-4">
-          <div className="w-full h-full max-w-4xl">
+        <div className="flex-1 bg-gray-900 flex items-center justify-center p-3 hd-l:p-3.5 fhd-l:p-4 qhd-l:p-6">
+          <div className="w-full h-full max-w-3xl hd-l:max-w-3xl fhd-l:max-w-4xl qhd-l:max-w-6xl">
             <CameraView
               onVideoReady={onVideoReady}
               onVideoStop={onVideoStop}
@@ -67,7 +67,7 @@ export function LandscapeLayout({
         </div>
 
         {/* 우측: 출입 기록 */}
-        <div className="w-80 flex flex-col">
+        <div className="w-72 hd-l:w-80 fhd-l:w-80 qhd-l:w-96 flex flex-col">
           <AccessLogSection accessLogs={accessLogs} />
         </div>
       </div>

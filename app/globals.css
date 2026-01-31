@@ -25,6 +25,24 @@
 /* 가로 모드 (landscape) 변형 */
 @custom-variant landscape (&:where(@media (orientation: landscape)));
 
+/* HD Portrait (720px-1079px, portrait) */
+@custom-variant hd-p (&:where(@media (min-width: 720px) and (max-width: 1079px) and (orientation: portrait)));
+
+/* FHD Portrait (1080px-1439px, portrait) */
+@custom-variant fhd-p (&:where(@media (min-width: 1080px) and (max-width: 1439px) and (orientation: portrait)));
+
+/* QHD Portrait (1440px+, portrait) */
+@custom-variant qhd-p (&:where(@media (min-width: 1440px) and (orientation: portrait)));
+
+/* HD Landscape (1280px-1919px, landscape) */
+@custom-variant hd-l (&:where(@media (min-width: 1280px) and (max-width: 1919px) and (orientation: landscape)));
+
+/* FHD Landscape (1920px-2559px, landscape) */
+@custom-variant fhd-l (&:where(@media (min-width: 1920px) and (max-width: 2559px) and (orientation: landscape)));
+
+/* QHD Landscape (2560px+, landscape) */
+@custom-variant qhd-l (&:where(@media (min-width: 2560px) and (orientation: landscape)));
+
 body {
   background: var(--background);
   color: var(--foreground);

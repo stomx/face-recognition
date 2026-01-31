@@ -35,7 +35,11 @@ export const CardHeader = forwardRef<
 >(({ children, className = '', ...props }, ref) => (
   <div
     ref={ref}
-    className={`px-6 py-4 border-b border-gray-100 ${className}`}
+    className={`
+      px-4 py-3 hd-p:px-5 hd-p:py-3.5 fhd-p:px-6 fhd-p:py-4 qhd-p:px-8 qhd-p:py-5
+      hd-l:px-5 hd-l:py-3 fhd-l:px-6 fhd-l:py-4 qhd-l:px-8 qhd-l:py-5
+      border-b border-gray-100 ${className}
+    `}
     {...props}
   >
     {children}
@@ -48,7 +52,15 @@ export const CardBody = forwardRef<
   HTMLDivElement,
   HTMLAttributes<HTMLDivElement>
 >(({ children, className = '', ...props }, ref) => (
-  <div ref={ref} className={`p-6 ${className}`} {...props}>
+  <div
+    ref={ref}
+    className={`
+      p-4 hd-p:p-5 fhd-p:p-6 qhd-p:p-8
+      hd-l:p-5 fhd-l:p-6 qhd-l:p-10
+      ${className}
+    `}
+    {...props}
+  >
     {children}
   </div>
 ));
@@ -61,7 +73,11 @@ export const CardFooter = forwardRef<
 >(({ children, className = '', ...props }, ref) => (
   <div
     ref={ref}
-    className={`px-6 py-4 border-t border-gray-100 bg-gray-50 ${className}`}
+    className={`
+      px-4 py-3 hd-p:px-5 hd-p:py-3.5 fhd-p:px-6 fhd-p:py-4 qhd-p:px-8 qhd-p:py-5
+      hd-l:px-5 hd-l:py-3 fhd-l:px-6 fhd-l:py-4 qhd-l:px-8 qhd-l:py-5
+      border-t border-gray-100 bg-gray-50 ${className}
+    `}
     {...props}
   >
     {children}

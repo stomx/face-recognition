@@ -66,7 +66,7 @@ export function CameraView(props: CameraViewProps) {
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
             <div className="text-center text-white">
               <svg
-                className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 opacity-50"
+                className="w-12 h-12 portrait:w-14 portrait:h-14 xl:w-16 xl:h-16 2xl:w-20 2xl:h-20 3xl:w-24 3xl:h-24 mx-auto mb-3 portrait:mb-4 xl:mb-4 2xl:mb-5 3xl:mb-6 opacity-50"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -78,7 +78,7 @@ export function CameraView(props: CameraViewProps) {
                   d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2 2v8a2 2 0 002 2z"
                 />
               </svg>
-              <p className="text-base sm:text-lg opacity-75">카메라가 비활성화되어 있습니다</p>
+              <p className="text-sm portrait:text-base xl:text-base 2xl:text-lg 3xl:text-xl opacity-75">카메라가 비활성화되어 있습니다</p>
             </div>
           </div>
         )}
@@ -86,9 +86,9 @@ export function CameraView(props: CameraViewProps) {
         {/* 에러 메시지 */}
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-red-900/80">
-            <div className="text-center text-white p-6">
+            <div className="text-center text-white p-4 portrait:p-5 xl:p-6 2xl:p-7 3xl:p-8">
               <svg
-                className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3"
+                className="w-10 h-10 portrait:w-12 portrait:h-12 xl:w-14 xl:h-14 2xl:w-16 2xl:h-16 3xl:w-18 3xl:h-18 mx-auto mb-2 portrait:mb-3 xl:mb-3 2xl:mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -100,7 +100,7 @@ export function CameraView(props: CameraViewProps) {
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              <p className="text-base sm:text-lg">{error}</p>
+              <p className="text-sm portrait:text-base xl:text-base 2xl:text-lg 3xl:text-xl">{error}</p>
             </div>
           </div>
         )}

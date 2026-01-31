@@ -33,9 +33,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizeStyles = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-4 py-2 text-base',
-      lg: 'px-6 py-3 text-lg',
+      sm: 'px-2 py-1 text-xs hd-p:px-2.5 hd-p:py-1.5 hd-p:text-sm fhd-p:px-3 fhd-p:py-1.5 fhd-p:text-sm qhd-p:px-4 qhd-p:py-2 qhd-p:text-base hd-l:px-3 hd-l:py-1.5 hd-l:text-sm fhd-l:px-3 fhd-l:py-1.5 fhd-l:text-sm qhd-l:px-4 qhd-l:py-2 qhd-l:text-base',
+      md: 'px-3 py-1.5 text-sm hd-p:px-3.5 hd-p:py-2 hd-p:text-base fhd-p:px-4 fhd-p:py-2 fhd-p:text-base qhd-p:px-6 qhd-p:py-3 qhd-p:text-lg hd-l:px-4 hd-l:py-2 hd-l:text-base fhd-l:px-4 fhd-l:py-2 fhd-l:text-base qhd-l:px-6 qhd-l:py-3 qhd-l:text-lg',
+      lg: 'px-4 py-2 text-base hd-p:px-5 hd-p:py-2.5 hd-p:text-lg fhd-p:px-6 fhd-p:py-3 fhd-p:text-lg qhd-p:px-8 qhd-p:py-4 qhd-p:text-xl hd-l:px-6 hd-l:py-3 hd-l:text-lg fhd-l:px-6 fhd-l:py-3 fhd-l:text-lg qhd-l:px-8 qhd-l:py-4 qhd-l:text-xl',
     };
 
     return (

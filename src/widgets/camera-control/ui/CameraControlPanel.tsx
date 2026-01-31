@@ -53,11 +53,11 @@ export function CameraControlPanel({
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 hd-p:space-y-5 fhd-p:space-y-6 qhd-p:space-y-8 hd-l:space-y-5 fhd-l:space-y-6 qhd-l:space-y-8">
       <div>
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">카메라 컨트롤</h2>
+        <h2 className="text-xs hd-p:text-sm fhd-p:text-sm qhd-p:text-base hd-l:text-sm fhd-l:text-sm qhd-l:text-lg font-semibold text-gray-700 uppercase tracking-wide mb-3 hd-p:mb-4 fhd-p:mb-4 qhd-p:mb-5 hd-l:mb-4 fhd-l:mb-4 qhd-l:mb-6">카메라 컨트롤</h2>
       </div>
-      <div className="space-y-5">
+      <div className="space-y-3 hd-p:space-y-4 fhd-p:space-y-5 qhd-p:space-y-6 hd-l:space-y-4 fhd-l:space-y-5 qhd-l:space-y-7">
         {/* 수동 인증 버튼 */}
         <PrimaryButton
           onClick={onManualAuth}
@@ -98,14 +98,14 @@ export function CameraControlPanel({
         </PrimaryButton>
 
         {/* 해상도 선택 */}
-        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-          <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+        <div className="bg-gray-50 rounded-2xl p-3 hd-p:p-4 fhd-p:p-4 qhd-p:p-5 hd-l:p-4 fhd-l:p-4 qhd-l:p-6 border border-gray-100">
+          <label className="block text-[10px] hd-p:text-xs fhd-p:text-xs qhd-p:text-sm hd-l:text-xs fhd-l:text-xs qhd-l:text-base font-semibold text-gray-600 uppercase tracking-wide mb-2 hd-p:mb-3 fhd-p:mb-3 qhd-p:mb-4 hd-l:mb-3 fhd-l:mb-3 qhd-l:mb-4">
             해상도
           </label>
           <select
             value={resolution}
             onChange={(e) => onResolutionChange(e.target.value as Resolution)}
-            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium"
+            className="w-full px-2.5 py-2 hd-p:px-3 hd-p:py-2.5 fhd-p:px-3 fhd-p:py-2.5 qhd-p:px-4 qhd-p:py-3 hd-l:px-3 hd-l:py-2.5 fhd-l:px-3 fhd-l:py-2.5 qhd-l:px-5 qhd-l:py-4 bg-white border border-gray-200 rounded-lg text-xs hd-p:text-sm fhd-p:text-sm qhd-p:text-base hd-l:text-sm fhd-l:text-sm qhd-l:text-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium"
           >
             {availableResolutions.map((res) => (
               <option key={res} value={res} className="bg-white">
@@ -116,21 +116,21 @@ export function CameraControlPanel({
         </div>
 
         {/* 방향 전환 */}
-        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-          <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+        <div className="bg-gray-50 rounded-2xl p-3 hd-p:p-4 fhd-p:p-4 qhd-p:p-5 hd-l:p-4 fhd-l:p-4 qhd-l:p-6 border border-gray-100">
+          <label className="block text-[10px] hd-p:text-xs fhd-p:text-xs qhd-p:text-sm hd-l:text-xs fhd-l:text-xs qhd-l:text-base font-semibold text-gray-600 uppercase tracking-wide mb-2 hd-p:mb-3 fhd-p:mb-3 qhd-p:mb-4 hd-l:mb-3 fhd-l:mb-3 qhd-l:mb-4">
             화면 방향
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1.5 hd-p:gap-2 fhd-p:gap-2 qhd-p:gap-3 hd-l:gap-2 fhd-l:gap-2 qhd-l:gap-4">
             <button
               onClick={() => onOrientationChange('landscape')}
-              className={`px-3 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+              className={`px-2.5 py-2 hd-p:px-3 hd-p:py-2.5 fhd-p:px-3 fhd-p:py-2.5 qhd-p:px-4 qhd-p:py-3 hd-l:px-3 hd-l:py-2.5 fhd-l:px-3 fhd-l:py-2.5 qhd-l:px-5 qhd-l:py-4 rounded-lg border-2 transition-all cursor-pointer ${
                 orientation === 'landscape'
                   ? 'border-blue-500 bg-blue-500 text-white'
                   : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
               }`}
             >
               <svg
-                className="w-5 h-5 mx-auto mb-1"
+                className="w-4 h-4 hd-p:w-5 hd-p:h-5 fhd-p:w-5 fhd-p:h-5 qhd-p:w-6 qhd-p:h-6 hd-l:w-5 hd-l:h-5 fhd-l:w-5 fhd-l:h-5 qhd-l:w-7 qhd-l:h-7 mx-auto mb-0.5 hd-p:mb-1 fhd-p:mb-1 qhd-p:mb-1.5 hd-l:mb-1 fhd-l:mb-1 qhd-l:mb-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -143,18 +143,18 @@ export function CameraControlPanel({
                   transform="rotate(90 12 12)"
                 />
               </svg>
-              <span className="text-xs font-semibold">가로</span>
+              <span className="text-[10px] hd-p:text-xs fhd-p:text-xs qhd-p:text-sm hd-l:text-xs fhd-l:text-xs qhd-l:text-base font-semibold">가로</span>
             </button>
             <button
               onClick={() => onOrientationChange('portrait')}
-              className={`px-3 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+              className={`px-2.5 py-2 hd-p:px-3 hd-p:py-2.5 fhd-p:px-3 fhd-p:py-2.5 qhd-p:px-4 qhd-p:py-3 hd-l:px-3 hd-l:py-2.5 fhd-l:px-3 fhd-l:py-2.5 qhd-l:px-5 qhd-l:py-4 rounded-lg border-2 transition-all cursor-pointer ${
                 orientation === 'portrait'
                   ? 'border-blue-500 bg-blue-500 text-white'
                   : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
               }`}
             >
               <svg
-                className="w-5 h-5 mx-auto mb-1"
+                className="w-4 h-4 hd-p:w-5 hd-p:h-5 fhd-p:w-5 fhd-p:h-5 qhd-p:w-6 qhd-p:h-6 hd-l:w-5 hd-l:h-5 fhd-l:w-5 fhd-l:h-5 qhd-l:w-7 qhd-l:h-7 mx-auto mb-0.5 hd-p:mb-1 fhd-p:mb-1 qhd-p:mb-1.5 hd-l:mb-1 fhd-l:mb-1 qhd-l:mb-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -166,7 +166,7 @@ export function CameraControlPanel({
                   d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
                 />
               </svg>
-              <span className="text-xs font-semibold">세로</span>
+              <span className="text-[10px] hd-p:text-xs fhd-p:text-xs qhd-p:text-sm hd-l:text-xs fhd-l:text-xs qhd-l:text-base font-semibold">세로</span>
             </button>
           </div>
         </div>
