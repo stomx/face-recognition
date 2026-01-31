@@ -7,42 +7,40 @@ import type { ModelLoadingStatus } from '@/shared/types';
 /**
  * 좌표 변환 함수
  * video.videoWidth/Height 기준 좌표를 canvas display 좌표로 변환
+ *
+ * object-contain 동작:
+ * - 비율을 유지하면서 컨테이너 안에 완전히 들어감
+ * - 패딩 추가 (letterbox/pillarbox)
  */
 function transformCoordinates(
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement
 ) {
-  const videoWidth = video.videoWidth;   // 실제 비디오 해상도 (예: 1920)
-  const videoHeight = video.videoHeight; // 실제 비디오 해상도 (예: 1080)
+  const videoWidth = video.videoWidth;
+  const videoHeight = video.videoHeight;
+  const canvasWidth = canvas.width;
+  const canvasHeight = canvas.height;
 
-  const displayWidth = canvas.width;     // 화면 표시 너비 (clientWidth)
-  const displayHeight = canvas.height;   // 화면 표시 높이 (clientHeight)
-
-  // 비디오와 표시 영역의 비율
   const videoAspect = videoWidth / videoHeight;
-  const displayAspect = displayWidth / displayHeight;
+  const canvasAspect = canvasWidth / canvasHeight;
 
   let scale: number;
   let offsetX: number;
   let offsetY: number;
 
-  // object-cover 동작:
-  // - 컨테이너를 꽉 채우되, 비율 유지
-  // - 넘치는 부분은 잘림
-  if (displayAspect > videoAspect) {
-    // 디스플레이가 비디오보다 더 넓음 → 가로에 맞춤
-    scale = displayWidth / videoWidth;
-    offsetX = 0;
-    offsetY = (displayHeight - videoHeight * scale) / 2;
-  } else {
-    // 디스플레이가 비디오보다 더 좁음 → 세로에 맞춤
-    scale = displayHeight / videoHeight;
-    offsetX = (displayWidth - videoWidth * scale) / 2;
+  if (canvasAspect > videoAspect) {
+    // Canvas가 video보다 가로로 넓음 → 세로에 맞추고 가로 패딩
+    scale = canvasHeight / videoHeight;
+    offsetX = (canvasWidth - videoWidth * scale) / 2;
     offsetY = 0;
+  } else {
+    // Canvas가 video보다 세로로 김 → 가로에 맞추고 세로 패딩
+    scale = canvasWidth / videoWidth;
+    offsetX = 0;
+    offsetY = (canvasHeight - videoHeight * scale) / 2;
   }
 
   return {
-    // 비디오 좌표 → 디스플레이 좌표로 변환
     transform: (x: number, y: number) => ({
       x: x * scale + offsetX,
       y: y * scale + offsetY,
@@ -219,20 +217,31 @@ export function useFaceDetection() {
     ) => {
       if (modelStatus !== 'loaded') return;
 
+      // 이미 실행 중이면 먼저 정지
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current);
+        detectionIntervalRef.current = null;
+      }
+
       setIsDetecting(true);
 
       const detect = async () => {
         try {
-          const detection = await detectFace(video);
+          // 캔버스 유효성 검사
           const ctx = canvas.getContext('2d');
-
           if (!ctx) return;
+
+          // 캔버스 크기가 0이면 건너뛰기 (아직 렌더링 안됨)
+          if (canvas.width === 0 || canvas.height === 0) return;
+
+          // 얼굴 감지
+          const detection = await detectFace(video);
 
           // 캔버스 초기화
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
           if (detection) {
-            // 좌표 변환 함수 생성
+            // ⭐ 매 프레임마다 좌표 변환 재계산 (canvas 크기 변경 대응)
             const { transform } = transformCoordinates(video, canvas);
 
             // 얼굴 박스 그리기

@@ -82,16 +82,20 @@ export function CameraView({
             await video.play();
             setIsStreaming(true);
 
-            if (canvasRef.current) {
-              // 약간의 지연 후 정확한 크기 측정
-              setTimeout(() => {
-                if (canvasRef.current && videoRef.current) {
-                  // canvas를 화면 표시 크기(clientWidth/Height)와 동일하게 설정
-                  canvasRef.current.width = videoRef.current.clientWidth;
-                  canvasRef.current.height = videoRef.current.clientHeight;
-                  onVideoReadyRef.current?.(videoRef.current, canvasRef.current);
-                }
-              }, 100);
+            if (canvasRef.current && videoRef.current) {
+              // requestAnimationFrame으로 정확한 렌더링 후 크기 측정
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  if (canvasRef.current && videoRef.current) {
+                    // getBoundingClientRect로 정확한 렌더링 크기 측정
+                    const rect = videoRef.current.getBoundingClientRect();
+                    canvasRef.current.width = rect.width;
+                    canvasRef.current.height = rect.height;
+
+                    onVideoReadyRef.current?.(videoRef.current, canvasRef.current);
+                  }
+                });
+              });
             }
           } catch (playError) {
             // AbortError는 무시 (새로운 로드 요청으로 인한 중단)
@@ -141,10 +145,10 @@ export function CameraView({
   // 전체 화면 모드 - Card 래퍼 없이 렌더링
   if (fullScreen) {
     return (
-      <div className={`relative bg-gray-900 ${className}`}>
+      <div className={`relative bg-gray-900 w-full ${className}`} style={{ aspectRatio: '16/9' }}>
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           style={{ transform: 'scaleX(-1)' }}
           playsInline
           muted
@@ -204,13 +208,13 @@ export function CameraView({
 
   // 일반 모드 - Card 래퍼 포함
   return (
-    <div className={`overflow-hidden h-full ${className}`}>
-      <div className="p-0 relative h-full">
-        {/* 비디오 컨테이너 - 적응형 */}
-        <div className="relative h-full w-full bg-gray-900">
+    <div className={`overflow-hidden ${className}`}>
+      <div className="p-0 relative w-full" style={{ aspectRatio: '16/9' }}>
+        {/* 비디오 컨테이너 - 16:9 고정 */}
+        <div className="relative w-full h-full bg-gray-900">
           <video
             ref={videoRef}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             style={{ transform: 'scaleX(-1)' }}
             playsInline
             muted
