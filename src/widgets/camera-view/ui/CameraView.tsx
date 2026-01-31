@@ -1,40 +1,33 @@
 'use client';
 
 import { Button } from '@/shared/ui';
-import type { Resolution, Orientation } from '@/shared/types';
 import { useCameraStream } from '../hooks/useCameraStream';
-
-interface CameraViewProps {
-  onVideoReady?: (video: HTMLVideoElement, canvas: HTMLCanvasElement) => void;
-  onVideoStop?: () => void;
-  showControls?: boolean;
-  autoStart?: boolean;
-  className?: string;
-  fullScreen?: boolean;
-  resolution?: Resolution;
-  orientation?: Orientation;
-}
+import type { CameraViewProps } from '../types/CameraViewProps';
 
 /**
- * CameraView 컴포넌트 (리팩터링 완료)
+ * CameraView 컴포넌트 (ISP 원칙 적용)
  *
  * 책임: 카메라 UI 렌더링
- * - Hook으로 로직 분리
- * - fullScreen에 따른 조건부 렌더링 (OCP 원칙)
+ * - Hook으로 로직 분리 (SRP)
+ * - 모드별 Props 타입 분리 (ISP)
+ * - fullScreen에 따른 조건부 렌더링 (OCP)
  *
- * 이전: 324줄 (카메라 로직 + UI 렌더링 혼재)
- * 현재: ~200줄 (UI 렌더링만)
+ * Props 모드:
+ * - controlled: showControls가 true일 때
+ * - embedded: 콜백 기반 제어
+ * - fullscreen: 전체 화면 모드
+ * - legacy: 기존 코드 호환성
  */
-export function CameraView({
-  onVideoReady,
-  onVideoStop,
-  showControls = true,
-  autoStart = false,
-  className = '',
-  fullScreen = false,
-  resolution = 'fhd',
-  orientation = 'landscape',
-}: CameraViewProps) {
+export function CameraView(props: CameraViewProps) {
+  // Props 정규화 (레거시 호환성)
+  const onVideoReady = 'onVideoReady' in props ? props.onVideoReady : undefined;
+  const onVideoStop = 'onVideoStop' in props ? props.onVideoStop : undefined;
+  const showControls = 'showControls' in props ? props.showControls ?? true : true;
+  const autoStart = 'autoStart' in props ? props.autoStart ?? false : false;
+  const className = props.className ?? '';
+  const fullScreen = 'fullScreen' in props ? props.fullScreen ?? false : false;
+  const resolution = 'resolution' in props ? props.resolution ?? 'fhd' : 'fhd';
+  const orientation = 'orientation' in props ? props.orientation ?? 'landscape' : 'landscape';
   // 공통 로직을 Hook으로 분리
   const camera = useCameraStream({
     autoStart,
