@@ -86,9 +86,9 @@ export function CameraView({
               // 약간의 지연 후 정확한 크기 측정
               setTimeout(() => {
                 if (canvasRef.current && videoRef.current) {
-                  const rect = videoRef.current.getBoundingClientRect();
-                  canvasRef.current.width = rect.width;
-                  canvasRef.current.height = rect.height;
+                  // canvas를 video의 실제 해상도와 동일하게 설정
+                  canvasRef.current.width = videoRef.current.videoWidth;
+                  canvasRef.current.height = videoRef.current.videoHeight;
                   onVideoReadyRef.current?.(videoRef.current, canvasRef.current);
                 }
               }, 100);
