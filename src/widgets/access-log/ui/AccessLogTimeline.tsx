@@ -1,6 +1,7 @@
 'use client';
 
 import { useUserStore } from '@/entities/user';
+import { EmptyState } from '@/shared/ui';
 
 type Resolution = 'hd' | 'fhd' | 'qhd';
 
@@ -40,22 +41,25 @@ export function AccessLogTimeline({ resolution = 'fhd' }: AccessLogTimelineProps
 
       <div className={`${isHD ? 'p-3' : 'p-5'} flex-1 overflow-y-auto min-h-0`}>
         {accessLogs.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <svg
-              className="w-16 h-16 mx-auto mb-4 opacity-30"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
-            <p className="text-lg">출입 기록이 없습니다</p>
-          </div>
+          <EmptyState
+            icon={
+              <svg
+                className="w-full h-full"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+            }
+            title="출입 기록이 없습니다"
+            className="py-12 text-gray-400 text-lg"
+          />
         ) : (
           <div className={`${isHD ? 'space-y-1.5' : 'space-y-2'}`}>
             {accessLogs.map((log) => (
