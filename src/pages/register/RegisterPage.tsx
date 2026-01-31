@@ -6,7 +6,7 @@ import { useUserStore, UserCard } from '@/entities/user';
 import { useFaceDetection } from '@/features/face-detection';
 import { useFaceRegistration } from '@/features/face-registration';
 import { CameraView } from '@/widgets/camera-view';
-import { Card, CardHeader, CardBody, Button, Input, Badge } from '@/shared/ui';
+import { Card, CardHeader, CardBody, Button, Input, Badge, LoadingSpinner, EmptyState } from '@/shared/ui';
 
 export function RegisterPage() {
   const { users, isHydrated, hydrate, removeUser } = useUserStore();
@@ -68,10 +68,7 @@ export function RegisterPage() {
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 portrait:h-14 portrait:w-14 xl:h-16 xl:w-16 3xl:h-20 3xl:w-20 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600 text-base portrait:text-lg xl:text-lg 3xl:text-xl">로딩 중...</p>
-        </div>
+        <LoadingSpinner size="lg" text="로딩 중..." />
       </div>
     );
   }
@@ -215,23 +212,26 @@ export function RegisterPage() {
               </CardHeader>
               <CardBody className="max-h-[300px] portrait:max-h-[400px] xl:max-h-[500px] 2xl:max-h-[600px] 3xl:max-h-[700px] overflow-y-auto p-3 portrait:p-4 xl:p-4 2xl:p-5 3xl:p-6">
                 {users.length === 0 ? (
-                  <div className="text-center py-6 portrait:py-8 xl:py-8 2xl:py-10 3xl:py-12 text-gray-500">
-                    <svg
-                      className="w-10 h-10 portrait:w-12 portrait:h-12 xl:w-12 xl:h-12 2xl:w-14 2xl:h-14 3xl:w-16 3xl:h-16 mx-auto mb-2 portrait:mb-3 xl:mb-3 opacity-50"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    <p className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg">아직 등록된 사용자가 없습니다</p>
-                    <p className="text-[10px] portrait:text-xs xl:text-xs 2xl:text-sm 3xl:text-base mt-1 portrait:mt-2">위에서 첫 번째 사용자를 등록해보세요!</p>
-                  </div>
+                  <EmptyState
+                    icon={
+                      <svg
+                        className="w-full h-full"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                    }
+                    title="아직 등록된 사용자가 없습니다"
+                    description="위에서 첫 번째 사용자를 등록해보세요!"
+                    className="py-6 portrait:py-8 xl:py-8 2xl:py-10 3xl:py-12 text-gray-500"
+                  />
                 ) : (
                   <div className="space-y-2 portrait:space-y-3 xl:space-y-3 2xl:space-y-4 3xl:space-y-5">
                     {users.map((user) => (

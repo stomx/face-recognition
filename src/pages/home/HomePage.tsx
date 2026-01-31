@@ -1,221 +1,19 @@
 'use client';
 
-import { useEffect, useState, useRef, memo } from 'react';
-import Link from 'next/link';
+import { useEffect, useState, useRef } from 'react';
 import { useUserStore } from '@/entities/user';
 import { useFaceDetection } from '@/features/face-detection';
 import { useVerificationMachine } from '@/features/face-verification';
 import { CameraView } from '@/widgets/camera-view';
 import { TIMING } from '@/features/face-verification/model/types';
-
-// ★ 시간 패널 분리 (1초 타이머가 부모 컴포넌트를 리렌더링하지 않도록)
-const TimeDisplay = memo(function TimeDisplay() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatTime = (date: Date) => date.toLocaleTimeString('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-  const formatDate = (date: Date) => date.toLocaleDateString('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  });
-
-  return (
-    <div className="bg-black/50 backdrop-blur-md rounded-2xl px-4 py-3 portrait:px-5 portrait:py-4">
-      <div className="text-2xl portrait:text-3xl font-light tracking-wider text-white">
-        {formatTime(currentTime)}
-      </div>
-      <div className="text-xs portrait:text-sm text-gray-400">
-        {formatDate(currentTime)}
-      </div>
-    </div>
-  );
-});
-
-// ★ 설정 패널 분리 (부모 리렌더링의 영향을 받지 않도록)
-interface SettingsPanelProps {
-  showSettings: boolean;
-  onClose: () => void;
-  isAutoMode: boolean;
-  onAutoModeChange: (value: boolean) => void;
-  resolution: Resolution;
-  onResolutionChange: (value: Resolution) => void;
-  orientation: Orientation;
-  onOrientationChange: (value: Orientation) => void;
-  usersCount: number;
-  todaySuccessCount: number;
-  todayFailCount: number;
-  modelStatus: string;
-}
-
-const SettingsPanel = memo(function SettingsPanel({
-  showSettings,
-  onClose,
-  isAutoMode,
-  onAutoModeChange,
-  resolution,
-  onResolutionChange,
-  orientation,
-  onOrientationChange,
-  usersCount,
-  todaySuccessCount,
-  todayFailCount,
-  modelStatus,
-}: SettingsPanelProps) {
-  const settingsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // 설정 패널 자동 숨김
-  useEffect(() => {
-    if (showSettings) {
-      settingsTimeoutRef.current = setTimeout(() => {
-        onClose();
-      }, 10000);
-    }
-    return () => {
-      if (settingsTimeoutRef.current) {
-        clearTimeout(settingsTimeoutRef.current);
-      }
-    };
-  }, [showSettings, onClose]);
-
-  if (!showSettings) return null;
-
-  return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-         onClick={onClose}>
-      <div className="bg-gray-900 rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl"
-           onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-white">설정</h2>
-          <button
-            onClick={onClose}
-            className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="mb-8">
-          <label className="block text-gray-400 text-lg mb-4">인증 모드</label>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => onAutoModeChange(false)}
-              className={`p-6 rounded-2xl text-center transition-all cursor-pointer ${
-                !isAutoMode
-                  ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              }`}
-            >
-              <svg className="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-              </svg>
-              <span className="text-xl font-medium">수동</span>
-              <p className="text-sm opacity-70 mt-1">버튼으로 인증</p>
-            </button>
-            <button
-              onClick={() => onAutoModeChange(true)}
-              disabled={usersCount === 0}
-              className={`p-6 rounded-2xl text-center transition-all cursor-pointer ${
-                isAutoMode
-                  ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              } ${usersCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <svg className="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span className="text-xl font-medium">자동</span>
-              <p className="text-sm opacity-70 mt-1">연속 인증</p>
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-6 mb-6">
-          {/* 해상도 선택 */}
-          <div>
-            <label className="block text-gray-400 text-lg mb-4">해상도</label>
-            <select
-              value={resolution}
-              onChange={(e) => onResolutionChange(e.target.value as Resolution)}
-              className="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
-            >
-              <option value="hd">1280x720 (HD)</option>
-              <option value="fhd">1920x1080 (FHD)</option>
-              <option value="qhd">2560x1440 (QHD)</option>
-            </select>
-          </div>
-
-          {/* 방향 선택 */}
-          <div>
-            <label className="block text-gray-400 text-lg mb-4">화면 방향</label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => onOrientationChange('landscape')}
-                className={`p-6 rounded-2xl text-center transition-all cursor-pointer ${
-                  orientation === 'landscape'
-                    ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                <span className="text-xl font-medium">가로</span>
-              </button>
-              <button
-                onClick={() => onOrientationChange('portrait')}
-                className={`p-6 rounded-2xl text-center transition-all cursor-pointer ${
-                  orientation === 'portrait'
-                    ? 'bg-blue-600 text-white ring-4 ring-blue-400/50'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                <span className="text-xl font-medium">세로</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-2xl p-6 mb-6">
-          <h3 className="text-gray-400 mb-4">오늘의 통계</h3>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-3xl font-bold text-white">{usersCount}</p>
-              <p className="text-sm text-gray-500">등록 사용자</p>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-green-400">{todaySuccessCount}</p>
-              <p className="text-sm text-gray-500">승인</p>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-red-400">{todayFailCount}</p>
-              <p className="text-sm text-gray-500">거부</p>
-            </div>
-          </div>
-        </div>
-
-        <Link href="/register" className="block">
-          <button className="w-full p-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xl font-medium transition-colors flex items-center justify-center gap-3 cursor-pointer">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-            사용자 등록
-          </button>
-        </Link>
-      </div>
-    </div>
-  );
-});
-
-type Resolution = 'hd' | 'fhd' | 'qhd';
-type Orientation = 'landscape' | 'portrait';
+import {
+  TimeDisplay,
+  LoadingSpinner,
+  ResultOverlay,
+  SettingsPanel,
+  Resolution,
+  Orientation,
+} from '@/shared/ui';
 
 const RESOLUTION_MAP = {
   hd: { width: 1280, height: 720 },
@@ -272,13 +70,7 @@ export function HomePage() {
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <div className="relative w-24 h-24 mx-auto mb-6">
-            <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full" />
-            <div className="absolute inset-0 border-4 border-transparent border-t-blue-500 rounded-full animate-spin" />
-          </div>
-          <p className="text-gray-400 text-xl">시스템 초기화 중...</p>
-        </div>
+        <LoadingSpinner size="lg" text="시스템 초기화 중..." />
       </div>
     );
   }
@@ -292,7 +84,7 @@ export function HomePage() {
   const isTooFar = faceBox && faceBox.height < TIMING.MIN_FACE_HEIGHT;
   const isGoodDistance = faceBox && faceBox.height >= TIMING.MIN_FACE_HEIGHT;
 
-  // 결과 데이터 (인라인 렌더링용)
+  // 결과 데이터
   const verifyResult = machine.result;
 
   // 디스플레이 크기 계산
@@ -416,100 +208,40 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* 결과 오버레이 (인라인 - 1초 타이머로 인한 재마운트 방지) */}
+      {/* 결과 오버레이 */}
       {machine.isShowingResult && verifyResult && (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ${
-          machine.isClosing ? 'bg-black/0 backdrop-blur-none' : 'bg-black/50 backdrop-blur-sm'
-        }`}>
-          <div className={`relative max-w-md w-[90%] mx-4 rounded-3xl overflow-hidden ${
-            machine.isClosing ? 'animate-scale-out' : 'animate-scale-in'
-          } ${
-            verifyResult.isVerified
-              ? 'bg-green-500/20 border border-green-400/30'
-              : 'bg-red-500/20 border border-red-400/30'
-          } backdrop-blur-xl shadow-2xl`}>
-            <div className={`h-2 ${verifyResult.isVerified ? 'bg-green-500' : 'bg-red-500'}`} />
-
-            <div className="p-8 portrait:p-10 text-center text-white">
-              <div className={`mx-auto mb-6 w-24 h-24 portrait:w-28 portrait:h-28 rounded-full flex items-center justify-center ${
-                verifyResult.isVerified ? 'bg-green-500/30' : 'bg-red-500/30'
-              }`}>
-                {verifyResult.isVerified ? (
-                  <svg className="w-14 h-14 portrait:w-16 portrait:h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-14 h-14 portrait:w-16 portrait:h-16 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
-              </div>
-
-              <h1 className={`text-3xl portrait:text-4xl font-bold mb-3 ${
-                verifyResult.isVerified ? 'text-green-400' : 'text-red-400'
-              }`}>
-                {verifyResult.isVerified ? '출입 승인' : '확인 필요'}
-              </h1>
-
-              {verifyResult.isVerified && verifyResult.userName ? (
-                <p className="text-xl portrait:text-2xl text-white/90 mb-6">
-                  환영합니다, <span className="font-bold">{verifyResult.userName}</span>님
-                </p>
-              ) : (
-                <p className="text-lg portrait:text-xl text-white/80 mb-6">
-                  등록되지 않은 사용자입니다
-                </p>
-              )}
-
-              <div className="bg-white/10 rounded-2xl py-4 px-6 mb-6">
-                <div className="text-3xl portrait:text-4xl font-light text-white mb-1">
-                  {verifyResult.timestamp.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                </div>
-                <div className="text-sm portrait:text-base text-white/60">
-                  {verifyResult.timestamp.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
-                </div>
-              </div>
-
-              <div className="max-w-xs mx-auto">
-                <div className="flex justify-between text-sm mb-2 text-white/70">
-                  <span>일치율</span>
-                  <span className="font-bold">{(verifyResult.confidence * 100).toFixed(1)}%</span>
-                </div>
-                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-1000 ${
-                      verifyResult.isVerified ? 'bg-green-400' : 'bg-red-400'
-                    }`}
-                    style={{ width: `${verifyResult.confidence * 100}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="h-1.5 bg-black/20">
-              <div className={`h-full animate-shrink-width ${
-                verifyResult.isVerified ? 'bg-green-400/70' : 'bg-red-400/70'
-              }`} />
-            </div>
-          </div>
-        </div>
+        <ResultOverlay
+          type={verifyResult.isVerified ? 'success' : 'failed'}
+          userName={verifyResult.userName ?? undefined}
+          confidence={verifyResult.confidence}
+          message="등록되지 않은 사용자입니다"
+          onClose={() => {}}
+        />
       )}
         </div>
       </div>
 
+      {/* 설정 패널 */}
       <SettingsPanel
-        showSettings={showSettings}
+        isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        isAutoMode={isAutoMode}
-        onAutoModeChange={setIsAutoMode}
-        resolution={resolution}
-        onResolutionChange={setResolution}
-        orientation={orientation}
-        onOrientationChange={setOrientation}
-        usersCount={users.length}
-        todaySuccessCount={todaySuccessCount}
-        todayFailCount={todayFailCount}
+        settings={{
+          isAutoMode,
+          resolution,
+          orientation,
+        }}
+        onSettingsChange={(changes) => {
+          if (changes.isAutoMode !== undefined) setIsAutoMode(changes.isAutoMode);
+          if (changes.resolution !== undefined) setResolution(changes.resolution);
+          if (changes.orientation !== undefined) setOrientation(changes.orientation);
+        }}
+        stats={{
+          usersCount: users.length,
+          todaySuccessCount,
+          todayFailCount,
+        }}
         modelStatus={modelStatus}
+        variant="modal"
       />
 
       <style jsx global>{`

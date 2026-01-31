@@ -9,7 +9,7 @@ import { AccessLogTimeline } from '@/widgets/access-log';
 import { UserManagementPanel, UserFormModal } from '@/widgets/user-management';
 import { useFaceDetection } from '@/features/face-detection';
 import { loadModels, detectFace, findBestMatch, faceapi } from '@/shared/lib/face-api';
-import { ResultOverlay, StatusBadge, IconButton, StatCounter, PrimaryButton } from '@/shared/ui';
+import { ResultOverlay, StatusBadge, IconButton, StatCounter, PrimaryButton, StatsGrid, StatCard, EmptyState } from '@/shared/ui';
 import type { User } from '@/shared/types';
 
 type Resolution = 'hd' | 'fhd' | 'qhd';
@@ -226,19 +226,30 @@ export function DashboardPage() {
             </div>
 
             {/* 실시간 통계 - 컴팩트 */}
-            <div className="px-4 py-2 grid grid-cols-3 gap-2">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-3 border border-green-100">
-                <div className="text-2xl font-bold text-green-700">{todaySuccessCount}</div>
-                <div className="text-[10px] text-green-600 font-semibold uppercase">승인</div>
-              </div>
-              <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl p-3 border border-red-100">
-                <div className="text-2xl font-bold text-red-700">{todayFailCount}</div>
-                <div className="text-[10px] text-red-600 font-semibold uppercase">거부</div>
-              </div>
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-3 border border-blue-100">
-                <div className="text-2xl font-bold text-blue-700">{users.length}</div>
-                <div className="text-[10px] text-blue-600 font-semibold uppercase">사용자</div>
-              </div>
+            <div className="px-4 py-2">
+              <StatsGrid layout="grid-3">
+                <StatCard
+                  value={todaySuccessCount}
+                  label="승인"
+                  variant="success"
+                  size="compact"
+                  className="text-[10px] font-semibold uppercase"
+                />
+                <StatCard
+                  value={todayFailCount}
+                  label="거부"
+                  variant="error"
+                  size="compact"
+                  className="text-[10px] font-semibold uppercase"
+                />
+                <StatCard
+                  value={users.length}
+                  label="사용자"
+                  variant="info"
+                  size="compact"
+                  className="text-[10px] font-semibold uppercase"
+                />
+              </StatsGrid>
             </div>
 
             {/* 카메라 영역 - 중심 */}
@@ -302,9 +313,15 @@ export function DashboardPage() {
                     </div>
                   ))}
                   {useUserStore.getState().accessLogs.length === 0 && (
-                    <div className="text-center py-6 text-gray-400 text-sm">
-                      출입 기록이 없습니다
-                    </div>
+                    <EmptyState
+                      icon={
+                        <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      }
+                      title="출입 기록이 없습니다"
+                      className="py-6 text-gray-400 text-sm"
+                    />
                   )}
                 </div>
               </div>
@@ -530,9 +547,15 @@ export function DashboardPage() {
                 </div>
               ))}
               {users.length === 0 && (
-                <div className="text-center py-8 text-gray-400 text-sm">
-                  등록된 사용자가 없습니다
-                </div>
+                <EmptyState
+                  icon={
+                    <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  }
+                  title="등록된 사용자가 없습니다"
+                  className="py-8 text-gray-400 text-sm"
+                />
               )}
             </div>
           </div>
