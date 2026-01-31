@@ -8,8 +8,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useUserStore } from '@/entities/user';
-import { detectFace, findBestMatch } from '@/shared/lib/face-api';
-import { FACE_DETECTION_CONFIG } from '@/shared/config/constants';
+import { verifyFace } from '../lib/verifyFace';
 import type { ScanResult, VerificationResult } from './types';
 import { TIMING } from './types';
 
@@ -67,7 +66,9 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
     const canvas = canvasRef.current;
     if (!video || !canvas || video.readyState < 2) return null;
 
-    const detection = await detectFace(video);
+    // ⭐ 공통 인증 함수 사용
+    const labeledDescriptors = getLabeledDescriptors();
+    const result = await verifyFace(video, labeledDescriptors, getUserById);
 
     // ★ 스캔 완료 후에도 다시 체크 (스캔 중 상태가 바뀌었을 수 있음)
     if (phaseRef.current !== 'scanning') {
@@ -80,7 +81,7 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    if (!detection) {
+    if (!result.detection) {
       return {
         faceDetected: false,
         isVerified: false,
@@ -90,28 +91,8 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
       };
     }
 
-    const labeledDescriptors = getLabeledDescriptors();
-    if (labeledDescriptors.length === 0) {
-      return {
-        faceDetected: true,
-        faceBox: {
-          x: detection.detection.box.x,
-          y: detection.detection.box.y,
-          width: detection.detection.box.width,
-          height: detection.detection.box.height,
-        },
-        isVerified: false,
-        userId: null,
-        userName: null,
-        confidence: 0,
-      };
-    }
-
-    const bestMatch = findBestMatch(detection.descriptor, labeledDescriptors);
-    const box = detection.detection.box;
-    const isMatch = bestMatch != null && bestMatch.label !== 'unknown';
-    const confidence = bestMatch ? 1 - bestMatch.distance : 0;
-    const isVerified = isMatch && confidence >= (1 - FACE_DETECTION_CONFIG.MATCH_THRESHOLD);
+    // FaceBox 정보 추출
+    const box = result.detection.detection.box;
 
     return {
       faceDetected: true,
@@ -121,10 +102,10 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
         width: box.width,
         height: box.height,
       },
-      isVerified,
-      userId: isMatch ? bestMatch!.label : null,
-      userName: isMatch ? getUserById(bestMatch!.label)?.name || null : null,
-      confidence,
+      isVerified: result.success,
+      userId: result.userId,
+      userName: result.userName,
+      confidence: result.confidence,
     };
   }, [getLabeledDescriptors, getUserById]);
 
