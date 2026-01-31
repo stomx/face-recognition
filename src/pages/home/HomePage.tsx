@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useUserStore } from '@/entities/user';
+import { useUserRepository, useAccessLogRepository, useHydration } from '@/entities/user';
 import { useFaceDetection } from '@/features/face-detection';
 import { useVerificationMachine } from '@/features/face-verification';
 import { CameraView } from '@/widgets/camera-view';
@@ -16,8 +16,13 @@ import type { Resolution, Orientation } from '@/shared/types';
 import { RESOLUTION_MAP } from '@/shared/types';
 
 export function HomePage() {
-  const { users, accessLogs, isHydrated, hydrate } = useUserStore();
+  const userRepo = useUserRepository();
+  const accessLogRepo = useAccessLogRepository();
+  const { isHydrated, hydrate } = useHydration();
   const { modelStatus, initializeModels } = useFaceDetection();
+
+  const users = userRepo.getAll();
+  const accessLogs = accessLogRepo.getAll();
 
   const [isAutoMode, setIsAutoMode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);

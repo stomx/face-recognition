@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useUserStore } from '@/entities/user';
+import { useUserRepository } from '@/entities/user';
 import { detectFace, findBestMatch } from '@/shared/lib/face-api';
 import { FACE_DETECTION_CONFIG } from '@/shared/config/constants';
 import type { User } from '@/shared/types';
@@ -20,7 +20,8 @@ interface DuplicateCheckResult {
 export function useFaceRegistration() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
-  const { addUser, addFaceToUser, getUserByName, users } = useUserStore();
+  const userRepo = useUserRepository();
+  const users = userRepo.getAll();
 
   const registerFace = useCallback(
     async (
@@ -55,7 +56,7 @@ export function useFaceRegistration() {
         const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
         // 사용자 등록
-        addUser(name.trim(), detection.descriptor, imageData);
+        userRepo.add(name.trim(), detection.descriptor, imageData);
 
         return true;
       } catch (err) {
@@ -66,7 +67,7 @@ export function useFaceRegistration() {
         setIsRegistering(false);
       }
     },
-    [addUser]
+    [userRepo]
   );
 
   const addFaceToExistingUser = useCallback(
@@ -80,7 +81,7 @@ export function useFaceRegistration() {
         return false;
       }
 
-      const existingUser = getUserByName(name.trim());
+      const existingUser = userRepo.getByName(name.trim());
       if (!existingUser) {
         setRegistrationError('해당 사용자를 찾을 수 없습니다.');
         return false;
@@ -107,7 +108,7 @@ export function useFaceRegistration() {
         const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
         // 기존 사용자에게 얼굴 추가
-        addFaceToUser(existingUser.id, detection.descriptor, imageData);
+        userRepo.addFace(existingUser.id, detection.descriptor, imageData);
 
         return true;
       } catch (err) {
@@ -118,7 +119,7 @@ export function useFaceRegistration() {
         setIsRegistering(false);
       }
     },
-    [addFaceToUser, getUserByName]
+    [userRepo]
   );
 
   const checkForDuplicates = useCallback(
@@ -217,7 +218,7 @@ export function useFaceRegistration() {
         setIsRegistering(false);
       }
     },
-    [users]
+    [userRepo]
   );
 
   const registerFaceWithData = useCallback(
@@ -234,7 +235,7 @@ export function useFaceRegistration() {
       }
 
       try {
-        addUser(name.trim(), detection.descriptor, imageData);
+        userRepo.add(name.trim(), detection.descriptor, imageData);
         return true;
       } catch (err) {
         console.error('Registration error:', err);
@@ -242,7 +243,7 @@ export function useFaceRegistration() {
         return false;
       }
     },
-    [addUser]
+    [userRepo]
   );
 
   const addFaceToUserWithData = useCallback(
@@ -254,7 +255,7 @@ export function useFaceRegistration() {
       imageData: string
     ): boolean => {
       try {
-        addFaceToUser(userId, detection.descriptor, imageData);
+        userRepo.addFace(userId, detection.descriptor, imageData);
         return true;
       } catch (err) {
         console.error('Face addition error:', err);
@@ -262,7 +263,7 @@ export function useFaceRegistration() {
         return false;
       }
     },
-    [addFaceToUser]
+    [userRepo]
   );
 
   const clearError = useCallback(() => {

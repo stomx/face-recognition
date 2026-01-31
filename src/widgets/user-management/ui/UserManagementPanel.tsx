@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useUserStore } from '@/entities/user';
+import { useUserRepository } from '@/entities/user';
 import { ConfirmDialog, PrimaryButton } from '@/shared/ui';
 import Link from 'next/link';
 
 export function UserManagementPanel() {
-  const { users, removeUser } = useUserStore();
+  const userRepo = useUserRepository();
+  const users = userRepo.getAll();
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const handleDeleteClick = (id: string, name: string) => {
@@ -15,7 +16,7 @@ export function UserManagementPanel() {
 
   const handleConfirmDelete = () => {
     if (deleteConfirm) {
-      removeUser(deleteConfirm.id);
+      userRepo.remove(deleteConfirm.id);
       setDeleteConfirm(null);
     }
   };

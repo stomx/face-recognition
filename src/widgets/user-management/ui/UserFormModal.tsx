@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import { CameraView } from '@/widgets/camera-view';
 import { PrimaryButton } from '@/shared/ui';
 import { useFaceRegistration, DuplicateCheckModal } from '@/features/face-registration';
-import { useUserStore } from '@/entities/user';
+import { useUserRepository } from '@/entities/user';
 import type { User } from '@/shared/types';
 import * as faceapi from '@vladmandic/face-api';
 
@@ -23,7 +23,7 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
     registerFaceWithData,
     addFaceToUserWithData,
   } = useFaceRegistration();
-  const { updateUser, getUserByName } = useUserStore();
+  const userRepo = useUserRepository();
 
   const [name, setName] = useState(user?.name || '');
   const [isCameraOn, setIsCameraOn] = useState(true);
@@ -189,11 +189,11 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
 
     if (user) {
       // 기존 사용자 수정
-      updateUser(user.id, name.trim(), capturedDescriptor, capturedImage);
+      userRepo.update(user.id, name.trim(), capturedDescriptor, capturedImage);
       success = true;
     } else {
       // 새 사용자 등록 - 동일 이름 확인
-      const existingUser = getUserByName(name.trim());
+      const existingUser = userRepo.getByName(name.trim());
       if (existingUser) {
         // 동일 이름 사용자가 있으면 얼굴 추가
         const detection = {

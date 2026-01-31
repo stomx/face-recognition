@@ -1,6 +1,6 @@
 'use client';
 
-import { useUserStore } from '@/entities/user';
+import { useAccessLogRepository } from '@/entities/user';
 import { EmptyState } from '@/shared/ui';
 import type { Resolution } from '@/shared/types';
 
@@ -9,7 +9,8 @@ interface AccessLogTimelineProps {
 }
 
 export function AccessLogTimeline({ resolution = 'fhd' }: AccessLogTimelineProps) {
-  const { accessLogs } = useUserStore();
+  const accessLogRepo = useAccessLogRepository();
+  const accessLogs = accessLogRepo.getAll();
   const isHD = resolution === 'hd';
 
   const formatTime = (date: Date) => {

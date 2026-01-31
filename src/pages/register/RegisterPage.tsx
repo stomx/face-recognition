@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { useUserStore, UserCard } from '@/entities/user';
+import { UserCard } from '@/entities/user';
+import { useUserRepository, useHydration } from '@/entities/user';
 import { useFaceDetection } from '@/features/face-detection';
 import { useFaceRegistration, DuplicateCheckModal } from '@/features/face-registration';
 import type { User } from '@/shared/types';
@@ -11,7 +12,9 @@ import { CameraView } from '@/widgets/camera-view';
 import { Card, CardHeader, CardBody, Button, Input, Badge, LoadingSpinner, EmptyState } from '@/shared/ui';
 
 export function RegisterPage() {
-  const { users, isHydrated, hydrate, removeUser, removeFaceFromUser } = useUserStore();
+  const userRepo = useUserRepository();
+  const { isHydrated, hydrate } = useHydration();
+  const users = userRepo.getAll();
   const { modelStatus, initializeModels, startContinuousDetection, stopContinuousDetection } =
     useFaceDetection();
   const {
@@ -163,12 +166,12 @@ export function RegisterPage() {
 
   const handleDeleteUser = (id: string) => {
     if (window.confirm('정말로 이 사용자를 삭제하시겠습니까?')) {
-      removeUser(id);
+      userRepo.remove(id);
     }
   };
 
   const handleDeleteFace = (userId: string, faceIndex: number) => {
-    removeFaceFromUser(userId, faceIndex);
+    userRepo.removeFace(userId, faceIndex);
   };
 
   if (!isHydrated) {

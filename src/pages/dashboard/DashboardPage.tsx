@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/entities/user';
+import { useUserRepository, useAccessLogRepository, useFaceMatchRepository, useHydration } from '@/entities/user';
 import { CameraView } from '@/widgets/camera-view';
 import { CameraControlPanel } from '@/widgets/camera-control';
 import { AccessLogTimeline } from '@/widgets/access-log';
@@ -23,8 +23,14 @@ interface ResultState {
 
 export function DashboardPage() {
   const router = useRouter();
-  const { users, removeUser, addAccessLog, accessLogs, hydrate, isHydrated, getLabeledDescriptors, getUserById } = useUserStore();
+  const userRepo = useUserRepository();
+  const accessLogRepo = useAccessLogRepository();
+  const faceMatchRepo = useFaceMatchRepository();
+  const { isHydrated, hydrate } = useHydration();
   const { modelStatus, initializeModels } = useFaceDetection();
+
+  const users = userRepo.getAll();
+  const accessLogs = accessLogRepo.getAll();
 
   const [resolution, setResolution] = useState<Resolution>('fhd');
   const [orientation, setOrientation] = useState<Orientation>('landscape');
@@ -90,12 +96,12 @@ export function DashboardPage() {
 
     try {
       // ⭐ 공통 인증 함수 사용
-      const labeledDescriptors = getLabeledDescriptors();
-      const result = await verifyFace(videoRef.current, labeledDescriptors, getUserById);
+      const labeledDescriptors = faceMatchRepo.getLabeledDescriptors();
+      const result = await verifyFace(videoRef.current, labeledDescriptors, userRepo.getById);
 
       if (!result.detection) {
         // 얼굴 감지 실패
-        addAccessLog(null, null, 'failed');
+        accessLogRepo.add(null, null, 'failed');
         setResult({
           type: 'failed',
           message: '얼굴이 감지되지 않았습니다',
@@ -105,7 +111,7 @@ export function DashboardPage() {
 
       if (result.success) {
         // 인증 성공
-        addAccessLog(result.userId!, result.userName!, 'success', result.confidence);
+        accessLogRepo.add(result.userId!, result.userName!, 'success', result.confidence);
         setResult({
           type: 'success',
           userName: result.userName!,
@@ -114,7 +120,7 @@ export function DashboardPage() {
         });
       } else {
         // 인증 실패
-        addAccessLog(null, '미확인 사용자', 'failed', result.confidence);
+        accessLogRepo.add(null, '미확인 사용자', 'failed', result.confidence);
         setResult({
           type: 'failed',
           confidence: result.confidence,
@@ -125,7 +131,7 @@ export function DashboardPage() {
       }
     } catch (error) {
       console.error('인증 실패:', error);
-      addAccessLog(null, null, 'failed');
+      accessLogRepo.add(null, null, 'failed');
       setResult({
         type: 'failed',
         message: '인증 중 오류가 발생했습니다',
@@ -135,8 +141,8 @@ export function DashboardPage() {
     }
   };
 
-  const todaySuccessCount = users.length > 0 ? useUserStore.getState().accessLogs.filter(l => l.status === 'success').length : 0;
-  const todayFailCount = users.length > 0 ? useUserStore.getState().accessLogs.filter(l => l.status === 'failed').length : 0;
+  const todaySuccessCount = accessLogs.filter(l => l.status === 'success').length;
+  const todayFailCount = accessLogs.filter(l => l.status === 'failed').length;
 
   // 사용자 관리 핸들러
   const handleAddUser = () => {
@@ -151,7 +157,7 @@ export function DashboardPage() {
 
   const handleDeleteUser = (userId: string) => {
     if (confirm('정말 삭제하시겠습니까?')) {
-      removeUser(userId);
+      userRepo.remove(userId);
     }
   };
 
@@ -250,7 +256,7 @@ export function DashboardPage() {
               <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-sm p-3">
                 <h3 className="text-xs font-bold text-gray-700 mb-2.5">최근 활동</h3>
                 <div className="space-y-1.5">
-                  {useUserStore.getState().accessLogs.slice(0, 3).map((log) => (
+                  {accessLogs.slice(0, 3).map((log) => (
                     <div
                       key={log.id}
                       className={`p-2 rounded-lg border ${
@@ -291,7 +297,7 @@ export function DashboardPage() {
                       </div>
                     </div>
                   ))}
-                  {useUserStore.getState().accessLogs.length === 0 && (
+                  {accessLogs.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
                       <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

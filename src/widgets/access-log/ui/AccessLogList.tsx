@@ -1,10 +1,11 @@
 'use client';
 
-import { useUserStore } from '@/entities/user';
+import { useAccessLogRepository } from '@/entities/user';
 import { Card, CardHeader, CardBody, Badge, Button } from '@/shared/ui';
 
 export function AccessLogList() {
-  const { accessLogs, clearAccessLogs } = useUserStore();
+  const accessLogRepo = useAccessLogRepository();
+  const accessLogs = accessLogRepo.getAll();
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('ko-KR', {
@@ -40,7 +41,7 @@ export function AccessLogList() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={clearAccessLogs}
+            onClick={() => accessLogRepo.clear()}
             className="text-[10px] portrait:text-xs xl:text-xs 2xl:text-sm 3xl:text-base px-2 portrait:px-3 xl:px-3 2xl:px-4 3xl:px-5 py-1 portrait:py-1.5 xl:py-1.5 2xl:py-2 3xl:py-2.5"
           >
             기록 삭제

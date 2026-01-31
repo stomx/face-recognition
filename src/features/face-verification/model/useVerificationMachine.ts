@@ -7,7 +7,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useUserStore } from '@/entities/user';
+import { useUserRepository, useAccessLogRepository, useFaceMatchRepository } from '@/entities/user';
 import { verifyFace } from '../lib/verifyFace';
 import type { ScanResult, VerificationResult } from './types';
 import { TIMING } from './types';
@@ -31,7 +31,9 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
   // ★ 동기 상태 추적용 ref (React 상태는 비동기라 중복 호출 방지 불가)
   const phaseRef = useRef<Phase>('idle');
 
-  const { getLabeledDescriptors, getUserById, addAccessLog } = useUserStore();
+  const faceMatchRepo = useFaceMatchRepository();
+  const userRepo = useUserRepository();
+  const accessLogRepo = useAccessLogRepository();
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -67,8 +69,8 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
     if (!video || !canvas || video.readyState < 2) return null;
 
     // ⭐ 공통 인증 함수 사용
-    const labeledDescriptors = getLabeledDescriptors();
-    const result = await verifyFace(video, labeledDescriptors, getUserById);
+    const labeledDescriptors = faceMatchRepo.getLabeledDescriptors();
+    const result = await verifyFace(video, labeledDescriptors, userRepo.getById);
 
     // ★ 스캔 완료 후에도 다시 체크 (스캔 중 상태가 바뀌었을 수 있음)
     if (phaseRef.current !== 'scanning') {
@@ -107,7 +109,7 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
       userName: result.userName,
       confidence: result.confidence,
     };
-  }, [getLabeledDescriptors, getUserById]);
+  }, [faceMatchRepo, userRepo]);
 
   // 스캐너 시작
   const startScanner = useCallback(() => {
@@ -151,7 +153,7 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
     setPhase('result');
 
     // 출입 기록 저장
-    addAccessLog(
+    accessLogRepo.add(
       scan.userId,
       scan.userName,
       scan.isVerified ? 'success' : 'failed',
@@ -188,7 +190,7 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
       }, 300);
     }, TIMING.RESULT_DURATION);
 
-  }, [stopScanner, addAccessLog, clearTimer, startScanner]);
+  }, [stopScanner, accessLogRepo, clearTimer, startScanner]);
 
   // 수동 인증 요청
   const requestVerify = useCallback(() => {
