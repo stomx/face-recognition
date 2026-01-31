@@ -11,10 +11,8 @@ import { useFaceDetection } from '@/features/face-detection';
 import { loadModels, faceapi } from '@/shared/lib/face-api';
 import { verifyFace } from '@/features/face-verification';
 import { ResultOverlay, StatusBadge, IconButton, StatCounter, PrimaryButton, StatsGrid, StatCard, EmptyState } from '@/shared/ui';
-import type { User } from '@/shared/types';
-
-type Resolution = 'hd' | 'fhd' | 'qhd';
-type Orientation = 'landscape' | 'portrait';
+import type { User, Resolution, Orientation } from '@/shared/types';
+import { RESOLUTION_MAP, RESOLUTION_LABELS } from '@/shared/types';
 
 interface ResultState {
   type: 'success' | 'failed';
@@ -161,13 +159,6 @@ export function DashboardPage() {
     // 사용자 등록/수정 성공
     setShowUserModal(false);
     setEditingUser(undefined);
-  };
-
-  // 해상도 맵핑
-  const RESOLUTION_MAP = {
-    hd: { width: 1280, height: 720 },
-    fhd: { width: 1920, height: 1080 },
-    qhd: { width: 2560, height: 1440 },
   };
 
   const displaySize = RESOLUTION_MAP[resolution];
@@ -347,9 +338,9 @@ export function DashboardPage() {
                     onChange={(e) => handleResolutionChange(e.target.value as Resolution)}
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
                   >
-                    <option value="hd">1280×720 HD</option>
-                    <option value="fhd">1920×1080 FHD</option>
-                    <option value="qhd">2560×1440 QHD</option>
+                    <option value="hd">{RESOLUTION_LABELS.hd}</option>
+                    <option value="fhd">{RESOLUTION_LABELS.fhd}</option>
+                    <option value="qhd">{RESOLUTION_LABELS.qhd}</option>
                   </select>
                 </div>
 
@@ -609,9 +600,9 @@ export function DashboardPage() {
                           onChange={(e) => handleResolutionChange(e.target.value as Resolution)}
                           className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
                         >
-                          <option value="hd">1280×720 HD</option>
-                          <option value="fhd">1920×1080 FHD</option>
-                          <option value="qhd">2560×1440 QHD</option>
+                          <option value="hd">{RESOLUTION_LABELS.hd}</option>
+                          <option value="fhd">{RESOLUTION_LABELS.fhd}</option>
+                          <option value="qhd">{RESOLUTION_LABELS.qhd}</option>
                         </select>
                       </div>
 

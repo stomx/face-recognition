@@ -5,9 +5,8 @@ import Link from 'next/link';
 import { ModeSelectionGrid, ModeOption } from './ModeSelectionGrid';
 import { StatsGrid } from './stats/StatsGrid';
 import { StatCard } from './stats/StatCard';
-
-export type Resolution = 'hd' | 'fhd' | 'qhd';
-export type Orientation = 'landscape' | 'portrait';
+import type { Resolution, Orientation } from '@/shared/types';
+import { RESOLUTION_LABELS } from '@/shared/types';
 
 export interface Settings {
   isAutoMode: boolean;
@@ -135,9 +134,9 @@ export const SettingsPanel = memo(function SettingsPanel({
             onChange={(e) => onSettingsChange({ resolution: e.target.value as Resolution })}
             className="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
           >
-            <option value="hd">1280x720 (HD)</option>
-            <option value="fhd">1920x1080 (FHD)</option>
-            <option value="qhd">2560x1440 (QHD)</option>
+            <option value="hd">{RESOLUTION_LABELS.hd}</option>
+            <option value="fhd">{RESOLUTION_LABELS.fhd}</option>
+            <option value="qhd">{RESOLUTION_LABELS.qhd}</option>
           </select>
         </div>
 

@@ -3,9 +3,8 @@
 import { useRef, useEffect, useState } from 'react';
 import { Card, CardBody, Button } from '@/shared/ui';
 import { CAMERA_CONFIG } from '@/shared/config/constants';
-
-type Resolution = 'hd' | 'fhd' | 'qhd';
-type Orientation = 'landscape' | 'portrait';
+import type { Resolution, Orientation } from '@/shared/types';
+import { RESOLUTION_MAP } from '@/shared/types';
 
 interface CameraViewProps {
   onVideoReady?: (video: HTMLVideoElement, canvas: HTMLCanvasElement) => void;
@@ -17,12 +16,6 @@ interface CameraViewProps {
   resolution?: Resolution; // 해상도 설정
   orientation?: Orientation; // 방향 설정
 }
-
-const RESOLUTION_MAP = {
-  hd: { width: 1280, height: 720 },
-  fhd: { width: 1920, height: 1080 },
-  qhd: { width: 2560, height: 1440 },
-};
 
 export function CameraView({
   onVideoReady,

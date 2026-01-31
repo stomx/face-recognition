@@ -11,15 +11,9 @@ import {
   LoadingSpinner,
   ResultOverlay,
   SettingsPanel,
-  Resolution,
-  Orientation,
 } from '@/shared/ui';
-
-const RESOLUTION_MAP = {
-  hd: { width: 1280, height: 720 },
-  fhd: { width: 1920, height: 1080 },
-  qhd: { width: 2560, height: 1440 },
-};
+import type { Resolution, Orientation } from '@/shared/types';
+import { RESOLUTION_MAP } from '@/shared/types';
 
 export function HomePage() {
   const { users, accessLogs, isHydrated, hydrate } = useUserStore();

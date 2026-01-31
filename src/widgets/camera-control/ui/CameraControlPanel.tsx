@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { PrimaryButton } from '@/shared/ui';
-
-type Resolution = 'hd' | 'fhd' | 'qhd';
-type Orientation = 'landscape' | 'portrait';
+import type { Resolution, Orientation } from '@/shared/types';
+import { RESOLUTION_LABELS } from '@/shared/types';
 
 interface CameraControlPanelProps {
   resolution: Resolution;
@@ -99,9 +98,7 @@ export function CameraControlPanel({
           >
             {availableResolutions.map((res) => (
               <option key={res} value={res} className="bg-white">
-                {res === 'hd' && '1280x720 (HD)'}
-                {res === 'fhd' && '1920x1080 (FHD)'}
-                {res === 'qhd' && '2560x1440 (QHD)'}
+                {RESOLUTION_LABELS[res]}
               </option>
             ))}
           </select>

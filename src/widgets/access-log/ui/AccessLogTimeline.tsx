@@ -2,8 +2,7 @@
 
 import { useUserStore } from '@/entities/user';
 import { EmptyState } from '@/shared/ui';
-
-type Resolution = 'hd' | 'fhd' | 'qhd';
+import type { Resolution } from '@/shared/types';
 
 interface AccessLogTimelineProps {
   resolution?: Resolution;

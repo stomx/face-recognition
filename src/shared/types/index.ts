@@ -35,3 +35,7 @@ export type ModelLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
 // 앱 모드
 export type AppMode = 'register' | 'verify';
+
+// 카메라 관련
+export type { Resolution, Orientation, ResolutionKey } from './camera';
+export { RESOLUTION_MAP, RESOLUTION_LABELS } from './camera';

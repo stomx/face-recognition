@@ -26,4 +26,4 @@ export type { StatsGridProps } from './stats/StatsGrid';
 export { ModeSelectionGrid } from './ModeSelectionGrid';
 export type { ModeSelectionGridProps, ModeOption } from './ModeSelectionGrid';
 export { SettingsPanel } from './SettingsPanel';
-export type { SettingsPanelProps, Settings, Resolution, Orientation } from './SettingsPanel';
+export type { SettingsPanelProps, Settings } from './SettingsPanel';
