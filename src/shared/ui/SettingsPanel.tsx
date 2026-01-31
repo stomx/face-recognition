@@ -14,42 +14,54 @@ export interface Settings {
   orientation: Orientation;
 }
 
+/**
+ * ISP (Interface Segregation Principle) 적용
+ * 10개 Props → 4개 그룹으로 응집도 향상
+ */
 export interface SettingsPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
-  settings: Settings;
-  onSettingsChange: (settings: Partial<Settings>) => void;
-  stats: {
-    usersCount: number;
-    todaySuccessCount: number;
-    todayFailCount: number;
+  modal: {
+    isOpen: boolean;
+    onClose: () => void;
+    variant?: 'modal' | 'panel';
   };
-  modelStatus: 'idle' | 'loading' | 'loaded' | 'error';
-  variant?: 'modal' | 'panel';
-  showAutoMode?: boolean;
-  showRegisterLink?: boolean;
-  registerPath?: string;
+  settings: {
+    current: Settings;
+    onChange: (settings: Partial<Settings>) => void;
+  };
+  context: {
+    stats: {
+      usersCount: number;
+      todaySuccessCount: number;
+      todayFailCount: number;
+    };
+    modelStatus: 'idle' | 'loading' | 'loaded' | 'error';
+  };
+  features?: {
+    showAutoMode?: boolean;
+    showRegisterLink?: boolean;
+    registerPath?: string;
+  };
 }
 
 export const SettingsPanel = memo(function SettingsPanel({
-  isOpen,
-  onClose,
+  modal,
   settings,
-  onSettingsChange,
-  stats,
-  modelStatus,
-  variant = 'modal',
-  showAutoMode = true,
-  showRegisterLink = true,
-  registerPath = '/register',
+  context,
+  features,
 }: SettingsPanelProps) {
   const settingsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 기본값 설정
+  const variant = modal.variant ?? 'modal';
+  const showAutoMode = features?.showAutoMode ?? true;
+  const showRegisterLink = features?.showRegisterLink ?? true;
+  const registerPath = features?.registerPath ?? '/register';
+
   // 모달 variant에서만 10초 자동 닫기
   useEffect(() => {
-    if (variant === 'modal' && isOpen) {
+    if (variant === 'modal' && modal.isOpen) {
       settingsTimeoutRef.current = setTimeout(() => {
-        onClose();
+        modal.onClose();
       }, 10000);
     }
     return () => {
@@ -57,9 +69,9 @@ export const SettingsPanel = memo(function SettingsPanel({
         clearTimeout(settingsTimeoutRef.current);
       }
     };
-  }, [isOpen, onClose, variant]);
+  }, [modal.isOpen, modal.onClose, variant]);
 
-  if (!isOpen) return null;
+  if (!modal.isOpen) return null;
 
   const modeOptions: ModeOption[] = [
     {
@@ -103,7 +115,7 @@ export const SettingsPanel = memo(function SettingsPanel({
         <h2 className="text-2xl font-bold text-white">설정</h2>
         {variant === 'modal' && (
           <button
-            onClick={onClose}
+            onClick={modal.onClose}
             className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,9 +130,9 @@ export const SettingsPanel = memo(function SettingsPanel({
           <label className="block text-gray-400 text-lg mb-4">인증 모드</label>
           <ModeSelectionGrid
             options={modeOptions}
-            value={settings.isAutoMode ? 'auto' : 'manual'}
-            onChange={(value) => onSettingsChange({ isAutoMode: value === 'auto' })}
-            disabled={stats.usersCount === 0}
+            value={settings.current.isAutoMode ? 'auto' : 'manual'}
+            onChange={(value) => settings.onChange({ isAutoMode: value === 'auto' })}
+            disabled={context.stats.usersCount === 0}
           />
         </div>
       )}
@@ -130,8 +142,8 @@ export const SettingsPanel = memo(function SettingsPanel({
         <div>
           <label className="block text-gray-400 text-lg mb-4">해상도</label>
           <select
-            value={settings.resolution}
-            onChange={(e) => onSettingsChange({ resolution: e.target.value as Resolution })}
+            value={settings.current.resolution}
+            onChange={(e) => settings.onChange({ resolution: e.target.value as Resolution })}
             className="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
           >
             <option value="hd">{RESOLUTION_LABELS.hd}</option>
@@ -145,8 +157,8 @@ export const SettingsPanel = memo(function SettingsPanel({
           <label className="block text-gray-400 text-lg mb-4">화면 방향</label>
           <ModeSelectionGrid
             options={orientationOptions}
-            value={settings.orientation}
-            onChange={(value) => onSettingsChange({ orientation: value as Orientation })}
+            value={settings.current.orientation}
+            onChange={(value) => settings.onChange({ orientation: value as Orientation })}
           />
         </div>
       </div>
@@ -155,15 +167,15 @@ export const SettingsPanel = memo(function SettingsPanel({
         <h3 className="text-gray-400 mb-4">오늘의 통계</h3>
         <StatsGrid layout="grid-3">
           <div className="text-center">
-            <p className="text-3xl font-bold text-white">{stats.usersCount}</p>
+            <p className="text-3xl font-bold text-white">{context.stats.usersCount}</p>
             <p className="text-sm text-gray-500">등록 사용자</p>
           </div>
           <div className="text-center">
-            <p className="text-3xl font-bold text-green-400">{stats.todaySuccessCount}</p>
+            <p className="text-3xl font-bold text-green-400">{context.stats.todaySuccessCount}</p>
             <p className="text-sm text-gray-500">승인</p>
           </div>
           <div className="text-center">
-            <p className="text-3xl font-bold text-red-400">{stats.todayFailCount}</p>
+            <p className="text-3xl font-bold text-red-400">{context.stats.todayFailCount}</p>
             <p className="text-sm text-gray-500">거부</p>
           </div>
         </StatsGrid>
@@ -186,7 +198,7 @@ export const SettingsPanel = memo(function SettingsPanel({
     return (
       <div
         className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={modal.onClose}
       >
         <div
           className="bg-gray-900 rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl"

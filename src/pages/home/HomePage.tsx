@@ -220,27 +220,33 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* 설정 패널 */}
+      {/* 설정 패널 - ISP 적용된 그룹화 Props */}
       <SettingsPanel
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
+        modal={{
+          isOpen: showSettings,
+          onClose: () => setShowSettings(false),
+          variant: 'modal',
+        }}
         settings={{
-          isAutoMode,
-          resolution,
-          orientation,
+          current: {
+            isAutoMode,
+            resolution,
+            orientation,
+          },
+          onChange: (changes) => {
+            if (changes.isAutoMode !== undefined) setIsAutoMode(changes.isAutoMode);
+            if (changes.resolution !== undefined) setResolution(changes.resolution);
+            if (changes.orientation !== undefined) setOrientation(changes.orientation);
+          },
         }}
-        onSettingsChange={(changes) => {
-          if (changes.isAutoMode !== undefined) setIsAutoMode(changes.isAutoMode);
-          if (changes.resolution !== undefined) setResolution(changes.resolution);
-          if (changes.orientation !== undefined) setOrientation(changes.orientation);
+        context={{
+          stats: {
+            usersCount: users.length,
+            todaySuccessCount,
+            todayFailCount,
+          },
+          modelStatus,
         }}
-        stats={{
-          usersCount: users.length,
-          todaySuccessCount,
-          todayFailCount,
-        }}
-        modelStatus={modelStatus}
-        variant="modal"
       />
 
       <style jsx global>{`

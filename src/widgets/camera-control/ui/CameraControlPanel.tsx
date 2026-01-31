@@ -5,27 +5,36 @@ import { PrimaryButton } from '@/shared/ui';
 import type { Resolution, Orientation } from '@/shared/types';
 import { RESOLUTION_LABELS } from '@/shared/types';
 
+/**
+ * ISP (Interface Segregation Principle) 적용
+ * 8개 Props → 3개 그룹으로 응집도 향상
+ */
 interface CameraControlPanelProps {
-  resolution: Resolution;
-  orientation: Orientation;
-  isCameraOn: boolean;
-  onResolutionChange: (resolution: Resolution) => void;
-  onOrientationChange: (orientation: Orientation) => void;
-  onCameraToggle: () => void;
-  onManualAuth: () => void;
-  isAuthenticating?: boolean;
+  cameraSettings: {
+    resolution: Resolution;
+    orientation: Orientation;
+    onResolutionChange: (resolution: Resolution) => void;
+    onOrientationChange: (orientation: Orientation) => void;
+  };
+  cameraControl: {
+    isCameraOn: boolean;
+    onCameraToggle: () => void;
+  };
+  authentication: {
+    onManualAuth: () => void;
+    isAuthenticating?: boolean;
+  };
 }
 
 export function CameraControlPanel({
-  resolution,
-  orientation,
-  isCameraOn,
-  onResolutionChange,
-  onOrientationChange,
-  onCameraToggle,
-  onManualAuth,
-  isAuthenticating = false,
+  cameraSettings,
+  cameraControl,
+  authentication,
 }: CameraControlPanelProps) {
+  // 기본값 설정
+  const { resolution, orientation, onResolutionChange, onOrientationChange } = cameraSettings;
+  const { isCameraOn, onCameraToggle } = cameraControl;
+  const { onManualAuth, isAuthenticating = false } = authentication;
   const [availableResolutions, setAvailableResolutions] = useState<Resolution[]>(['hd', 'fhd', 'qhd']);
 
   useEffect(() => {
