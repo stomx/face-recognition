@@ -44,18 +44,30 @@ export function loadUsers(): User[] {
       faceImages?: string[];
       registeredAt: string;
       imageData?: string;
-    }) => ({
-      ...user,
-      // 기존 faceDescriptor가 있으면 배열로 변환, 없으면 faceDescriptors 사용
-      faceDescriptors: user.faceDescriptors
+    }) => {
+      const descriptors = user.faceDescriptors
         ? user.faceDescriptors.map(arrayToFloat32Array)
         : user.faceDescriptor
         ? [arrayToFloat32Array(user.faceDescriptor)]
-        : [],
-      // 기존 imageData를 faceImages로 변환
-      faceImages: user.faceImages || (user.imageData ? [user.imageData] : []),
-      registeredAt: new Date(user.registeredAt),
-    }));
+        : [];
+
+      // faceImages가 없거나 descriptors보다 짧으면 imageData로 채우기
+      let images = user.faceImages || [];
+      if (images.length === 0 && user.imageData) {
+        images = [user.imageData];
+      }
+      // descriptors 개수만큼 이미지 배열 확장
+      while (images.length < descriptors.length && user.imageData) {
+        images.push(user.imageData);
+      }
+
+      return {
+        ...user,
+        faceDescriptors: descriptors,
+        faceImages: images,
+        registeredAt: new Date(user.registeredAt),
+      };
+    });
   } catch {
     return [];
   }

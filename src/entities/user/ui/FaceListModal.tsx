@@ -28,23 +28,25 @@ export function FaceListModal({ user, onClose, onDeleteFace }: FaceListModalProp
       </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {user.faceImages.map((imageData, index) => (
-            <div key={index} className="relative group">
-              <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-100">
-                {imageData ? (
-                  <img
-                    src={imageData}
-                    alt={`얼굴 ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                )}
-              </div>
+          {user.faceDescriptors.map((_, index) => {
+            const imageData = user.faceImages[index] || user.imageData;
+            return (
+              <div key={index} className="relative group">
+                <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-100">
+                  {imageData ? (
+                    <img
+                      src={imageData}
+                      alt={`얼굴 ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
 
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
@@ -57,11 +59,12 @@ export function FaceListModal({ user, onClose, onDeleteFace }: FaceListModalProp
                 </button>
               </div>
 
-              <div className="mt-2 text-center">
-                <span className="text-xs text-gray-500">얼굴 {index + 1}</span>
+                <div className="mt-2 text-center">
+                  <span className="text-xs text-gray-500">얼굴 {index + 1}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
       <div className="mt-6 flex justify-end">
