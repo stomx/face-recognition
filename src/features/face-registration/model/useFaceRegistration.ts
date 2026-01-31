@@ -6,6 +6,7 @@ import { detectFace, findBestMatch } from '@/shared/lib/face-api';
 import { FACE_DETECTION_CONFIG } from '@/shared/config/constants';
 import type { User } from '@/shared/types';
 import * as faceapi from '@vladmandic/face-api';
+import { useFaceImageCapture } from '../lib/useFaceImageCapture';
 
 interface DuplicateCheckResult {
   hasDuplicate: boolean;
@@ -22,6 +23,7 @@ export function useFaceRegistration() {
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const userRepo = useUserRepository();
   const users = userRepo.getAll();
+  const { captureImage } = useFaceImageCapture();
 
   const registerFace = useCallback(
     async (
@@ -47,13 +49,11 @@ export function useFaceRegistration() {
         }
 
         // 얼굴 이미지 캡처
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
+        const imageData = captureImage(video, canvas);
+        if (!imageData) {
+          setRegistrationError('이미지 캡처에 실패했습니다.');
+          return false;
         }
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
         // 사용자 등록
         userRepo.add(name.trim(), detection.descriptor, imageData);
@@ -99,13 +99,11 @@ export function useFaceRegistration() {
         }
 
         // 얼굴 이미지 캡처
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
+        const imageData = captureImage(video, canvas);
+        if (!imageData) {
+          setRegistrationError('이미지 캡처에 실패했습니다.');
+          return false;
         }
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
         // 기존 사용자에게 얼굴 추가
         userRepo.addFace(existingUser.id, detection.descriptor, imageData);
@@ -146,13 +144,17 @@ export function useFaceRegistration() {
         }
 
         // 얼굴 이미지 캡처
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
+        const imageData = captureImage(video, canvas);
+        if (!imageData) {
+          setRegistrationError('이미지 캡처에 실패했습니다.');
+          return {
+            hasDuplicate: false,
+            duplicateUser: null,
+            confidence: 0,
+            detection: null,
+            imageData: null,
+          };
         }
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
         // 기존 사용자가 없으면 중복 없음
         if (users.length === 0) {
