@@ -63,27 +63,22 @@ export function useFaceDetection() {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
           if (detection) {
-            // 비디오와 캔버스 크기 비율 계산
-            const scaleX = canvas.width / video.videoWidth;
-            const scaleY = canvas.height / video.videoHeight;
+            // face-api.js 내장 유틸리티로 정확한 좌표 변환
+            const displaySize = { width: canvas.width, height: canvas.height };
+            const resizedDetections = faceapi.resizeResults(detection, displaySize);
 
-            // 얼굴 박스 그리기 (스케일 적용)
-            const box = detection.detection.box;
+            // 얼굴 박스 그리기
+            const box = resizedDetections.detection.box;
             ctx.strokeStyle = '#00ff00';
             ctx.lineWidth = 3;
-            ctx.strokeRect(
-              box.x * scaleX,
-              box.y * scaleY,
-              box.width * scaleX,
-              box.height * scaleY
-            );
+            ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-            // 랜드마크 그리기 (스케일 적용)
-            const landmarks = detection.landmarks;
+            // 랜드마크 그리기
+            const landmarks = resizedDetections.landmarks;
             ctx.fillStyle = '#00ff00';
             landmarks.positions.forEach((point) => {
               ctx.beginPath();
-              ctx.arc(point.x * scaleX, point.y * scaleY, 2, 0, 2 * Math.PI);
+              ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
               ctx.fill();
             });
           }
