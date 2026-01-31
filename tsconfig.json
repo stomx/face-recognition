@@ -13,6 +13,21 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+
+    /* Type Safety Standards:
+     * - strict: true (enforced) - enables all strict type checking options
+     * - No 'any' types policy - verified via grep, no instances found
+     *
+     * Enhanced options evaluated but not enabled:
+     * - noUncheckedIndexedAccess: Would require extensive refactoring of facial landmark
+     *   array access (68 guaranteed points). Cost/benefit not justified for current codebase.
+     * - exactOptionalPropertyTypes: Conflicts with existing optional property patterns.
+     * - noPropertyAccessFromIndexSignature: Not needed given current architecture.
+     *
+     * Current configuration provides strong type safety while maintaining
+     * practical development workflow. Revisit enhanced options in future refactoring.
+     */
+
     "plugins": [
       {
         "name": "next"

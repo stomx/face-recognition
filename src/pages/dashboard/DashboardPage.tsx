@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAccessLogRepository, useHydration } from '@/entities/user';
 import { UserFormModal } from '@/widgets/user-management';
@@ -48,18 +48,25 @@ export function DashboardPage() {
   }, [isHydrated, hydrate, initializeModels]);
 
   // 사용자 관리 핸들러
-  const handleAddUser = () => {
+  const handleAddUser = useCallback(() => {
     setEditingUser(undefined);
     setShowUserModal(true);
-  };
+  }, []);
 
-  const handleUserSaveSuccess = () => {
+  const handleUserSaveSuccess = useCallback(() => {
     setShowUserModal(false);
     setEditingUser(undefined);
-  };
+  }, []);
 
-  // Layout Props 구성 (ISP 원칙 적용 - 5개 그룹)
-  const layoutProps = {
+  const handleNavigateHome = useCallback(() => {
+    router.push('/');
+  }, [router]);
+
+  // Data fetching (outside useMemo to ensure proper reactivity)
+  const accessLogs = accessLogRepo.getAll();
+
+  // Layout Props 구성 (ISP 원칙 적용 - 5개 그룹) - useMemo로 최적화
+  const layoutProps = useMemo(() => ({
     camera: {
       resolution: camera.resolution,
       orientation: camera.orientation,
@@ -85,18 +92,40 @@ export function DashboardPage() {
     system: {
       modelStatus,
       onAddUser: handleAddUser,
-      onNavigateHome: () => router.push('/'),
+      onNavigateHome: handleNavigateHome,
     },
 
     data: {
-      accessLogs: accessLogRepo.getAll(),
+      accessLogs,
     },
-  };
+  }), [
+    camera.resolution,
+    camera.orientation,
+    camera.isCameraOn,
+    camera.handleVideoReady,
+    camera.handleVideoStop,
+    camera.handleCameraToggle,
+    camera.handleResolutionChange,
+    camera.handleOrientationChange,
+    auth.isAuthenticating,
+    auth.handleManualAuth,
+    stats.usersCount,
+    stats.todaySuccessCount,
+    stats.todayFailCount,
+    modelStatus,
+    handleAddUser,
+    handleNavigateHome,
+    accessLogs,
+  ]);
 
   // 디스플레이 크기 계산
-  const displaySize = RESOLUTION_MAP[camera.resolution];
-  const displayWidth = camera.orientation === 'landscape' ? displaySize.width : displaySize.height;
-  const displayHeight = camera.orientation === 'landscape' ? displaySize.height : displaySize.width;
+  const { displayWidth, displayHeight } = useMemo(() => {
+    const displaySize = RESOLUTION_MAP[camera.resolution];
+    return {
+      displayWidth: camera.orientation === 'landscape' ? displaySize.width : displaySize.height,
+      displayHeight: camera.orientation === 'landscape' ? displaySize.height : displaySize.width,
+    };
+  }, [camera.resolution, camera.orientation]);
 
   // Layout 선택 (OCP 원칙)
   const LayoutComponent = camera.orientation === 'portrait' ? PortraitLayout : LandscapeLayout;

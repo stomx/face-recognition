@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import type { User } from '@/shared/types';
 import { Card, CardBody, Button } from '@/shared/ui';
 import { FaceListModal } from './FaceListModal';
@@ -39,9 +40,11 @@ export function UserCard({ user, onDelete, onDeleteFace }: UserCardProps) {
       <Card variant="outlined" className="hover:shadow-md transition-shadow">
         <CardBody className="flex items-center gap-3 portrait:gap-4 xl:gap-4 2xl:gap-5 3xl:gap-6 p-2.5 portrait:p-3 xl:p-3 2xl:p-4 3xl:p-5">
         {user.imageData ? (
-          <img
+          <Image
             src={user.imageData}
             alt={user.name}
+            width={96}
+            height={96}
             className="w-12 h-12 portrait:w-14 portrait:h-14 xl:w-16 xl:h-16 2xl:w-20 2xl:h-20 3xl:w-24 3xl:h-24 rounded-full object-cover border-2 border-gray-200"
           />
         ) : (

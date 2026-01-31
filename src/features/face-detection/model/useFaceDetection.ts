@@ -5,12 +5,28 @@ import { loadModels, detectFace, faceapi } from '@/shared/lib/face-api';
 import type { ModelLoadingStatus } from '@/shared/types';
 import { CoordinateTransformer } from '@/shared/lib/canvas/CoordinateTransformer';
 import { FaceMeshRenderer } from '../lib';
+import { debug } from '@/shared/lib/debug';
+
+const log = debug.scope('FaceDetection');
+
+// Cache key for tracking canvas dimensions
+interface CanvasDimensions {
+  width: number;
+  height: number;
+  videoWidth: number;
+  videoHeight: number;
+}
 
 export function useFaceDetection() {
   const [modelStatus, setModelStatus] = useState<ModelLoadingStatus>('idle');
   const [isDetecting, setIsDetecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const detectionIntervalRef = useRef<number | null>(null);
+
+  // Cached objects for performance optimization
+  const transformerRef = useRef<CoordinateTransformer | null>(null);
+  const rendererRef = useRef<FaceMeshRenderer | null>(null);
+  const cachedDimensionsRef = useRef<CanvasDimensions | null>(null);
 
   // 모델 로드
   const initializeModels = useCallback(async () => {
@@ -25,7 +41,7 @@ export function useFaceDetection() {
     } catch (err) {
       setModelStatus('error');
       setError('모델 로드에 실패했습니다. 페이지를 새로고침 해주세요.');
-      console.error('Model loading error:', err);
+      log.error('Model loading failed', 'initializeModels', undefined, err);
     }
   }, [modelStatus]);
 
@@ -78,18 +94,38 @@ export function useFaceDetection() {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
           if (detection) {
-            // 매 프레임마다 좌표 변환 및 렌더러 재생성 (canvas 크기 변경 대응)
-            const transformer = new CoordinateTransformer(video, canvas);
-            const renderer = new FaceMeshRenderer(transformer);
+            // Check if canvas dimensions changed - only recreate objects when needed
+            const currentDimensions: CanvasDimensions = {
+              width: canvas.width,
+              height: canvas.height,
+              videoWidth: video.videoWidth,
+              videoHeight: video.videoHeight,
+            };
 
-            // 얼굴 박스 및 랜드마크 렌더링
-            renderer.renderFaceBox(ctx, detection.detection.box);
-            renderer.renderLandmarks(ctx, detection.landmarks);
+            const needsRecreate =
+              !cachedDimensionsRef.current ||
+              cachedDimensionsRef.current.width !== currentDimensions.width ||
+              cachedDimensionsRef.current.height !== currentDimensions.height ||
+              cachedDimensionsRef.current.videoWidth !== currentDimensions.videoWidth ||
+              cachedDimensionsRef.current.videoHeight !== currentDimensions.videoHeight;
+
+            if (needsRecreate) {
+              // Only recreate when dimensions change
+              transformerRef.current = new CoordinateTransformer(video, canvas);
+              rendererRef.current = new FaceMeshRenderer(transformerRef.current);
+              cachedDimensionsRef.current = currentDimensions;
+            }
+
+            // Use cached renderer for face rendering
+            if (rendererRef.current) {
+              rendererRef.current.renderFaceBox(ctx, detection.detection.box);
+              rendererRef.current.renderLandmarks(ctx, detection.landmarks);
+            }
           }
 
           onDetection?.(detection);
         } catch (err) {
-          console.error('Detection error:', err);
+          log.error('Continuous detection failed', 'detect', undefined, err);
         }
       };
 

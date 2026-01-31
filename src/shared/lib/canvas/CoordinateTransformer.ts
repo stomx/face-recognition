@@ -16,6 +16,15 @@ export class CoordinateTransformer {
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
 
+    // Division by zero guards
+    if (videoHeight === 0 || videoWidth === 0 || canvasHeight === 0 || canvasWidth === 0) {
+      // Safe defaults when dimensions are invalid
+      this.scale = 1;
+      this.offsetX = 0;
+      this.offsetY = 0;
+      return;
+    }
+
     const videoAspect = videoWidth / videoHeight;
     const canvasAspect = canvasWidth / canvasHeight;
 
@@ -40,20 +49,5 @@ export class CoordinateTransformer {
       x: x * this.scale + this.offsetX,
       y: y * this.scale + this.offsetY,
     };
-  }
-
-  /**
-   * Getter 메서드들
-   */
-  getScale(): number {
-    return this.scale;
-  }
-
-  getOffsetX(): number {
-    return this.offsetX;
-  }
-
-  getOffsetY(): number {
-    return this.offsetY;
   }
 }

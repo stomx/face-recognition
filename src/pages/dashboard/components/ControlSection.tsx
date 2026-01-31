@@ -1,4 +1,3 @@
-import { IconButton } from '@/shared/ui';
 import type { Resolution, Orientation } from '@/shared/types';
 import { RESOLUTION_LABELS } from '@/shared/types';
 

@@ -2,6 +2,9 @@
 
 import * as faceapi from '@vladmandic/face-api';
 import { FACE_DETECTION_CONFIG } from '../config/constants';
+import { debug } from './debug';
+
+const log = debug.scope('FaceAPI');
 
 let modelsLoaded = false;
 let modelsLoading = false;
@@ -27,7 +30,7 @@ export async function loadModels(): Promise<void> {
       faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
     ]);
     modelsLoaded = true;
-    console.log('Face-api models loaded successfully');
+    log.log('Models loaded successfully', 'loadModels');
   } finally {
     modelsLoading = false;
   }
@@ -43,13 +46,17 @@ export async function detectFace(
   video: HTMLVideoElement
 ): Promise<faceapi.WithFaceDescriptor<faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>> | null> {
   if (!modelsLoaded) {
-    console.warn('Models not loaded yet, skipping detection');
+    log.warn('Models not loaded yet, skipping detection', 'detectFace');
     return null;
   }
 
   // 비디오 유효성 체크
   if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
-    console.warn('Video not ready for detection');
+    log.warn('Video not ready for detection', 'detectFace', {
+      hasVideo: !!video,
+      width: video?.videoWidth,
+      height: video?.videoHeight
+    });
     return null;
   }
 
@@ -61,7 +68,7 @@ export async function detectFace(
 
     return detection || null;
   } catch (err) {
-    console.error('Face detection error:', err);
+    log.error('Face detection failed', 'detectFace', undefined, err);
     return null;
   }
 }

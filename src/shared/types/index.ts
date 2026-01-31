@@ -5,7 +5,7 @@ export interface User {
   faceDescriptors: Float32Array[]; // 여러 얼굴 등록 지원
   faceImages: string[]; // 각 얼굴의 이미지 (Base64)
   registeredAt: Date;
-  imageData?: string; // Base64 encoded face image (대표 이미지 - 호환성용)
+  imageData?: string | undefined; // Base64 encoded face image (대표 이미지 - 호환성용)
 }
 
 // 인증 로그 타입
@@ -15,7 +15,7 @@ export interface AccessLog {
   userName: string | null;
   timestamp: Date;
   status: 'success' | 'failed' | 'unknown';
-  confidence?: number;
+  confidence?: number | undefined;
 }
 
 // 얼굴 감지 결과 타입

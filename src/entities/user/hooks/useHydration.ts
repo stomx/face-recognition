@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useUserStore } from '../model/store';
-import type { IHydrationRepository } from '../repository/interface';
 
 /**
  * Hydration Hook

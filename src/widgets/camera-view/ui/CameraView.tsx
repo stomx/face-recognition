@@ -29,7 +29,14 @@ export function CameraView(props: CameraViewProps) {
   const resolution = 'resolution' in props ? props.resolution ?? 'fhd' : 'fhd';
   const orientation = 'orientation' in props ? props.orientation ?? 'landscape' : 'landscape';
   // 공통 로직을 Hook으로 분리
-  const camera = useCameraStream({
+  const {
+    videoRef,
+    canvasRef,
+    isStreaming,
+    error,
+    startCamera,
+    stopCamera,
+  } = useCameraStream({
     autoStart,
     resolution,
     orientation,
@@ -42,20 +49,20 @@ export function CameraView(props: CameraViewProps) {
     return (
       <div className={`relative bg-gray-900 w-full ${className}`} style={{ aspectRatio: '16/9' }}>
         <video
-          ref={camera.videoRef}
+          ref={videoRef}
           className="w-full h-full object-contain"
           style={{ transform: 'scaleX(-1)' }}
           playsInline
           muted
         />
         <canvas
-          ref={camera.canvasRef}
+          ref={canvasRef}
           className="absolute top-0 left-0 w-full h-full pointer-events-none"
           style={{ transform: 'scaleX(-1)' }}
         />
 
         {/* 오버레이 - 카메라 비활성화 */}
-        {!camera.isStreaming && !camera.error && (
+        {!isStreaming && !error && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
             <div className="text-center text-white">
               <svg
@@ -77,7 +84,7 @@ export function CameraView(props: CameraViewProps) {
         )}
 
         {/* 에러 메시지 */}
-        {camera.error && (
+        {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-red-900/80">
             <div className="text-center text-white p-6">
               <svg
@@ -93,7 +100,7 @@ export function CameraView(props: CameraViewProps) {
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              <p className="text-base sm:text-lg">{camera.error}</p>
+              <p className="text-base sm:text-lg">{error}</p>
             </div>
           </div>
         )}
@@ -108,20 +115,20 @@ export function CameraView(props: CameraViewProps) {
         {/* 비디오 컨테이너 */}
         <div className="relative w-full h-full bg-gray-900">
           <video
-            ref={camera.videoRef}
+            ref={videoRef}
             className="w-full h-full object-contain"
             style={{ transform: 'scaleX(-1)' }}
             playsInline
             muted
           />
           <canvas
-            ref={camera.canvasRef}
+            ref={canvasRef}
             className="absolute top-0 left-0 w-full h-full pointer-events-none"
             style={{ transform: 'scaleX(-1)' }}
           />
 
           {/* 오버레이 */}
-          {!camera.isStreaming && !camera.error && (
+          {!isStreaming && !error && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
               <div className="text-center text-white">
                 <svg
@@ -143,7 +150,7 @@ export function CameraView(props: CameraViewProps) {
           )}
 
           {/* 에러 메시지 */}
-          {camera.error && (
+          {error && (
             <div className="absolute inset-0 flex items-center justify-center bg-red-900/80">
               <div className="text-center text-white p-4 portrait:p-5 xl:p-6 2xl:p-8 3xl:p-10">
                 <svg
@@ -159,13 +166,13 @@ export function CameraView(props: CameraViewProps) {
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>
-                <p className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg">{camera.error}</p>
+                <p className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg">{error}</p>
               </div>
             </div>
           )}
 
           {/* 스트리밍 인디케이터 */}
-          {camera.isStreaming && (
+          {isStreaming && (
             <div className="absolute top-3 portrait:top-4 xl:top-4 2xl:top-5 3xl:top-6 left-3 portrait:left-4 xl:left-4 2xl:left-5 3xl:left-6 flex items-center gap-1.5 portrait:gap-2 xl:gap-2 2xl:gap-2.5 3xl:gap-3">
               <span className="w-2.5 h-2.5 portrait:w-3 portrait:h-3 xl:w-3 xl:h-3 2xl:w-3.5 2xl:h-3.5 3xl:w-4 3xl:h-4 bg-red-500 rounded-full animate-pulse" />
               <span className="text-white text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg font-medium drop-shadow">LIVE</span>
@@ -176,8 +183,8 @@ export function CameraView(props: CameraViewProps) {
         {/* 컨트롤 버튼 */}
         {showControls && (
           <div className="p-3 portrait:p-4 xl:p-4 2xl:p-5 3xl:p-6 bg-gray-50 flex justify-center gap-3 portrait:gap-4 xl:gap-4 2xl:gap-5 3xl:gap-6">
-            {!camera.isStreaming ? (
-              <Button onClick={camera.startCamera} variant="primary" className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg px-3 portrait:px-4 xl:px-4 2xl:px-5 3xl:px-6 py-2 portrait:py-2.5 xl:py-2.5 2xl:py-3 3xl:py-3.5">
+            {!isStreaming ? (
+              <Button onClick={startCamera} variant="primary" className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg px-3 portrait:px-4 xl:px-4 2xl:px-5 3xl:px-6 py-2 portrait:py-2.5 xl:py-2.5 2xl:py-3 3xl:py-3.5">
                 <svg
                   className="w-4 h-4 portrait:w-5 portrait:h-5 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 3xl:w-7 3xl:h-7 mr-2"
                   fill="none"
@@ -194,7 +201,7 @@ export function CameraView(props: CameraViewProps) {
                 카메라 시작
               </Button>
             ) : (
-              <Button onClick={camera.stopCamera} variant="danger" className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg px-3 portrait:px-4 xl:px-4 2xl:px-5 3xl:px-6 py-2 portrait:py-2.5 xl:py-2.5 2xl:py-3 3xl:py-3.5">
+              <Button onClick={stopCamera} variant="danger" className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg px-3 portrait:px-4 xl:px-4 2xl:px-5 3xl:px-6 py-2 portrait:py-2.5 xl:py-2.5 2xl:py-3 3xl:py-3.5">
                 <svg
                   className="w-4 h-4 portrait:w-5 portrait:h-5 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 3xl:w-7 3xl:h-7 mr-2"
                   fill="none"

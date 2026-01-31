@@ -1,22 +1,19 @@
 import { useState } from 'react';
 import type { User } from '@/shared/types';
-import * as faceapi from '@vladmandic/face-api';
 
 /**
  * RegisterPage 중복 확인 Hook (SRP 적용)
  *
  * 책임:
  * - 중복 확인 모달 상태 관리
- * - Pending 데이터 관리 (detection, imageData, name)
+ * - Pending 데이터 관리 (descriptor, imageData, name)
  * - 모달 핸들러 (확인/취소)
  */
 export function useDuplicateCheck() {
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [duplicateUser, setDuplicateUser] = useState<User | null>(null);
   const [duplicateConfidence, setDuplicateConfidence] = useState(0);
-  const [pendingDetection, setPendingDetection] = useState<faceapi.WithFaceDescriptor<
-    faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
-  > | null>(null);
+  const [pendingDescriptor, setPendingDescriptor] = useState<Float32Array | null>(null);
   const [pendingImageData, setPendingImageData] = useState<string | null>(null);
   const [pendingName, setPendingName] = useState('');
 
@@ -26,15 +23,13 @@ export function useDuplicateCheck() {
   const showModal = (
     user: User,
     confidence: number,
-    detection: faceapi.WithFaceDescriptor<
-      faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
-    >,
+    descriptor: Float32Array,
     imageData: string,
     name: string
   ) => {
     setDuplicateUser(user);
     setDuplicateConfidence(confidence);
-    setPendingDetection(detection);
+    setPendingDescriptor(descriptor);
     setPendingImageData(imageData);
     setPendingName(name);
     setShowDuplicateModal(true);
@@ -47,7 +42,7 @@ export function useDuplicateCheck() {
     setShowDuplicateModal(false);
     setDuplicateUser(null);
     setDuplicateConfidence(0);
-    setPendingDetection(null);
+    setPendingDescriptor(null);
     setPendingImageData(null);
     setPendingName('');
   };
@@ -57,7 +52,7 @@ export function useDuplicateCheck() {
     showDuplicateModal,
     duplicateUser,
     duplicateConfidence,
-    pendingDetection,
+    pendingDescriptor,
     pendingImageData,
     pendingName,
 

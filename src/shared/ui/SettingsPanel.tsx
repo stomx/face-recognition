@@ -4,7 +4,6 @@ import { useEffect, useRef, memo } from 'react';
 import Link from 'next/link';
 import { ModeSelectionGrid, ModeOption } from './ModeSelectionGrid';
 import { StatsGrid } from './stats/StatsGrid';
-import { StatCard } from './stats/StatCard';
 import type { Resolution, Orientation } from '@/shared/types';
 import { RESOLUTION_LABELS } from '@/shared/types';
 
@@ -69,7 +68,7 @@ export const SettingsPanel = memo(function SettingsPanel({
         clearTimeout(settingsTimeoutRef.current);
       }
     };
-  }, [modal.isOpen, modal.onClose, variant]);
+  }, [variant, modal]);
 
   if (!modal.isOpen) return null;
 

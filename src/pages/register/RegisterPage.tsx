@@ -38,11 +38,12 @@ export function RegisterPage() {
     clearError,
   } = useFaceRegistration();
 
-  // 로컬 상태 (4개만 유지)
+  // 로컬 상태 (5개)
   const [name, setName] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [isAddingToExisting, setIsAddingToExisting] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -58,6 +59,7 @@ export function RegisterPage() {
   const handleVideoReady = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
     videoRef.current = video;
     canvasRef.current = canvas;
+    setIsVideoReady(true);
 
     if (modelStatus === 'loaded') {
       startContinuousDetection(video, canvas);
@@ -73,6 +75,7 @@ export function RegisterPage() {
 
   const handleVideoStop = () => {
     stopContinuousDetection();
+    setIsVideoReady(false);
   };
 
   const handleRegister = async () => {
@@ -109,13 +112,13 @@ export function RegisterPage() {
         duplicateCheck.showModal(
           result.duplicateUser,
           result.confidence,
-          result.detection,
+          result.detection.descriptor,
           result.imageData,
           name
         );
       } else {
         // 중복 없음 - 바로 등록
-        const success = registerFaceWithData(name, result.detection, result.imageData);
+        const success = registerFaceWithData(name, result.detection.descriptor, result.imageData);
         if (success) {
           setName('');
           setShowSuccess(true);
@@ -126,11 +129,11 @@ export function RegisterPage() {
   };
 
   const handleConfirmSamePerson = () => {
-    if (!duplicateCheck.duplicateUser || !duplicateCheck.pendingDetection || !duplicateCheck.pendingImageData) return;
+    if (!duplicateCheck.duplicateUser || !duplicateCheck.pendingDescriptor || !duplicateCheck.pendingImageData) return;
 
     const success = addFaceToUserWithData(
       duplicateCheck.duplicateUser.id,
-      duplicateCheck.pendingDetection,
+      duplicateCheck.pendingDescriptor,
       duplicateCheck.pendingImageData
     );
     if (success) {
@@ -143,11 +146,11 @@ export function RegisterPage() {
   };
 
   const handleConfirmDifferentPerson = () => {
-    if (!duplicateCheck.pendingDetection || !duplicateCheck.pendingImageData || !duplicateCheck.pendingName) return;
+    if (!duplicateCheck.pendingDescriptor || !duplicateCheck.pendingImageData || !duplicateCheck.pendingName) return;
 
     const success = registerFaceWithData(
       duplicateCheck.pendingName,
-      duplicateCheck.pendingDetection,
+      duplicateCheck.pendingDescriptor,
       duplicateCheck.pendingImageData
     );
     if (success) {
@@ -320,7 +323,7 @@ export function RegisterPage() {
                       isRegistering ||
                       (!isAddingToExisting && !name.trim()) ||
                       (isAddingToExisting && !selectedUserId) ||
-                      !videoRef.current
+                      !isVideoReady
                     }
                     isLoading={isRegistering}
                   >

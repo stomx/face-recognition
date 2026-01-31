@@ -1,6 +1,9 @@
 import { useState, useCallback, RefObject } from 'react';
 import { useUserRepository, useAccessLogRepository, useFaceMatchRepository } from '@/entities/user';
 import { verifyFace } from '@/features/face-verification';
+import { debug } from '@/shared/lib/debug';
+
+const log = debug.scope('DashboardAuth');
 
 interface ResultState {
   type: 'success' | 'failed';
@@ -74,7 +77,7 @@ export function useDashboardAuth(
         });
       }
     } catch (error) {
-      console.error('인증 실패:', error);
+      log.error('Authentication failed', 'handleManualAuth', { modelStatus, userCount: users.length }, error);
       accessLogRepo.add(null, null, 'failed');
       setResult({
         type: 'failed',

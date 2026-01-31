@@ -2,6 +2,9 @@ import { useRef, useEffect, useState } from 'react';
 import { CAMERA_CONFIG } from '@/shared/config/constants';
 import type { Resolution, Orientation } from '@/shared/types';
 import { RESOLUTION_MAP } from '@/shared/types';
+import { debug } from '@/shared/lib/debug';
+
+const log = debug.scope('CameraStream');
 
 interface UseCameraStreamOptions {
   autoStart: boolean;
@@ -92,13 +95,13 @@ export function useCameraStream({
           } catch (playError) {
             // AbortError는 무시 (새로운 로드 요청으로 인한 중단)
             if ((playError as Error).name !== 'AbortError') {
-              console.error('Video play error:', playError);
+              log.error('Video play failed', 'startCamera', undefined, playError);
             }
           }
         };
       }
     } catch (err) {
-      console.error('Camera error:', err);
+      log.error('Camera access failed', 'startCamera', { resolution, orientation }, err);
       setError('카메라에 접근할 수 없습니다. 카메라 권한을 확인해주세요.');
       isStartedRef.current = false;
     }

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Modal, Button } from '@/shared/ui';
 import type { User } from '@/shared/types';
 
@@ -61,13 +62,17 @@ export function DuplicateCheckModal({
             </h5>
             <div className="border-2 border-blue-300 rounded-xl overflow-hidden bg-blue-50 p-2">
               <div className="aspect-square rounded-lg overflow-hidden bg-white">
-                {existingUser.faceImages[0] || existingUser.imageData ? (
-                  <img
-                    src={existingUser.faceImages[0] || existingUser.imageData}
-                    alt={existingUser.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
+                {(() => {
+                  const imageSrc = existingUser.faceImages[0] || existingUser.imageData;
+                  return imageSrc ? (
+                    <Image
+                      src={imageSrc}
+                      alt={existingUser.name}
+                      className="w-full h-full object-cover"
+                      fill
+                      sizes="300px"
+                    />
+                  ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <svg
                       className="w-16 h-16 text-gray-300"
@@ -83,7 +88,8 @@ export function DuplicateCheckModal({
                       />
                     </svg>
                   </div>
-                )}
+                  );
+                })()}
               </div>
               <div className="mt-2 text-center">
                 <p className="font-semibold text-gray-900">{existingUser.name}</p>
@@ -101,10 +107,12 @@ export function DuplicateCheckModal({
             </h5>
             <div className="border-2 border-green-300 rounded-xl overflow-hidden bg-green-50 p-2">
               <div className="aspect-square rounded-lg overflow-hidden bg-white">
-                <img
+                <Image
                   src={newFaceImage}
                   alt="새 얼굴"
                   className="w-full h-full object-cover"
+                  fill
+                  sizes="300px"
                 />
               </div>
               <div className="mt-2 text-center">

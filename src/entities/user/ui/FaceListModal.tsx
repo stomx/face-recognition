@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import type { User } from '@/shared/types';
 import { Modal, Button } from '@/shared/ui';
 
@@ -34,10 +35,12 @@ export function FaceListModal({ user, onClose, onDeleteFace }: FaceListModalProp
               <div key={index} className="relative group">
                 <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-100">
                   {imageData ? (
-                    <img
+                    <Image
                       src={imageData}
                       alt={`얼굴 ${index + 1}`}
                       className="w-full h-full object-cover"
+                      fill
+                      sizes="200px"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

@@ -8,6 +8,9 @@ import type { User } from '@/shared/types';
 import type { IUserRepository } from '@/shared/types/repository'; // DIP: 인터페이스 타입
 import * as faceapi from '@vladmandic/face-api';
 import { useFaceImageCapture } from '../lib/useFaceImageCapture';
+import { debug } from '@/shared/lib/debug';
+
+const log = debug.scope('FaceRegistration');
 
 interface DuplicateCheckResult {
   hasDuplicate: boolean;
@@ -65,14 +68,14 @@ export function useFaceRegistration() {
 
         return true;
       } catch (err) {
-        console.error('Registration error:', err);
+        log.error('Registration failed', 'registerFace', undefined, err);
         setRegistrationError('등록 중 오류가 발생했습니다. 다시 시도해주세요.');
         return false;
       } finally {
         setIsRegistering(false);
       }
     },
-    [userRepo]
+    [userRepo, captureImage]
   );
 
   const addFaceToExistingUser = useCallback(
@@ -115,14 +118,14 @@ export function useFaceRegistration() {
 
         return true;
       } catch (err) {
-        console.error('Face addition error:', err);
+        log.error('Face addition failed', 'addFaceToExistingUser', undefined, err);
         setRegistrationError('얼굴 추가 중 오류가 발생했습니다. 다시 시도해주세요.');
         return false;
       } finally {
         setIsRegistering(false);
       }
     },
-    [userRepo]
+    [userRepo, captureImage]
   );
 
   const checkForDuplicates = useCallback(
@@ -212,7 +215,7 @@ export function useFaceRegistration() {
           imageData,
         };
       } catch (err) {
-        console.error('Duplicate check error:', err);
+        log.error('Duplicate check failed', 'checkForDuplicates', undefined, err);
         setRegistrationError('중복 확인 중 오류가 발생했습니다. 다시 시도해주세요.');
         return {
           hasDuplicate: false,
@@ -225,27 +228,21 @@ export function useFaceRegistration() {
         setIsRegistering(false);
       }
     },
-    [userRepo]
+    [captureImage, users]
   );
 
   const registerFaceWithData = useCallback(
-    (
-      name: string,
-      detection: faceapi.WithFaceDescriptor<
-        faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
-      >,
-      imageData: string
-    ): boolean => {
+    (name: string, descriptor: Float32Array, imageData: string): boolean => {
       if (!name.trim()) {
         setRegistrationError('이름을 입력해주세요.');
         return false;
       }
 
       try {
-        userRepo.add(name.trim(), detection.descriptor, imageData);
+        userRepo.add(name.trim(), descriptor, imageData);
         return true;
       } catch (err) {
-        console.error('Registration error:', err);
+        log.error('Registration with data failed', 'registerFaceWithData', undefined, err);
         setRegistrationError('등록 중 오류가 발생했습니다. 다시 시도해주세요.');
         return false;
       }
@@ -254,18 +251,12 @@ export function useFaceRegistration() {
   );
 
   const addFaceToUserWithData = useCallback(
-    (
-      userId: string,
-      detection: faceapi.WithFaceDescriptor<
-        faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
-      >,
-      imageData: string
-    ): boolean => {
+    (userId: string, descriptor: Float32Array, imageData: string): boolean => {
       try {
-        userRepo.addFace(userId, detection.descriptor, imageData);
+        userRepo.addFace(userId, descriptor, imageData);
         return true;
       } catch (err) {
-        console.error('Face addition error:', err);
+        log.error('Face addition with data failed', 'addFaceToUserWithData', { userId }, err);
         setRegistrationError('얼굴 추가 중 오류가 발생했습니다. 다시 시도해주세요.');
         return false;
       }

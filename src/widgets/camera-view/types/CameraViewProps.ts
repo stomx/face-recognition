@@ -53,7 +53,64 @@ export interface FullScreenCameraProps extends BaseCameraProps {
 
 /**
  * 레거시 Props (기존 코드와의 호환성)
- * @deprecated 새 코드에서는 mode 기반 Props 사용 권장
+ *
+ * @deprecated v2.0.0부터 deprecated. v3.0.0에서 제거 예정
+ *
+ * **마이그레이션 가이드:**
+ *
+ * 1. **제어 가능한 카메라 (showControls: true):**
+ * ```ts
+ * // Before (레거시)
+ * <CameraView
+ *   showControls={true}
+ *   resolution="HD"
+ *   orientation="landscape"
+ *   onVideoReady={handleReady}
+ * />
+ *
+ * // After (권장)
+ * <CameraView
+ *   mode="controlled"
+ *   showControls={true}
+ *   resolution="HD"
+ *   orientation="landscape"
+ *   onVideoReady={handleReady}
+ * />
+ * ```
+ *
+ * 2. **임베디드 카메라 (외부 제어):**
+ * ```ts
+ * // Before (레거시)
+ * <CameraView
+ *   onVideoReady={handleReady}
+ *   autoStart={true}
+ * />
+ *
+ * // After (권장)
+ * <CameraView
+ *   mode="embedded"
+ *   onVideoReady={handleReady}
+ *   autoStart={true}
+ * />
+ * ```
+ *
+ * 3. **전체화면 카메라 (fullScreen: true):**
+ * ```ts
+ * // Before (레거시)
+ * <CameraView
+ *   fullScreen={true}
+ *   onVideoReady={handleReady}
+ * />
+ *
+ * // After (권장)
+ * <CameraView
+ *   mode="fullscreen"
+ *   fullScreen={true}
+ *   onVideoReady={handleReady}
+ * />
+ * ```
+ *
+ * **제거 예정일:** 2026년 6월 (v3.0.0 릴리스)
  */
 export interface LegacyCameraViewProps extends BaseCameraProps {
   onVideoReady?: (video: HTMLVideoElement, canvas: HTMLCanvasElement) => void;

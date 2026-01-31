@@ -1,12 +1,9 @@
 import { useState, RefObject } from 'react';
 import { useFaceRegistration } from '@/features/face-registration';
 import type { User } from '@/shared/types';
-import * as faceapi from '@vladmandic/face-api';
+import { debug } from '@/shared/lib/debug';
 
-interface CaptureResult {
-  image: string | null;
-  descriptor: Float32Array | null;
-}
+const log = debug.scope('UserFormCapture');
 
 /**
  * UserFormModal 캡처 로직 Hook
@@ -34,9 +31,7 @@ export function useUserFormCapture(
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [duplicateUser, setDuplicateUser] = useState<User | null>(null);
   const [duplicateConfidence, setDuplicateConfidence] = useState(0);
-  const [pendingDetection, setPendingDetection] = useState<faceapi.WithFaceDescriptor<
-    faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
-  > | null>(null);
+  const [pendingDescriptor, setPendingDescriptor] = useState<Float32Array | null>(null);
   const [pendingImageData, setPendingImageData] = useState<string | null>(null);
 
   const handleCapture = async (): Promise<void> => {
@@ -83,7 +78,7 @@ export function useUserFormCapture(
 
         if (result.hasDuplicate && result.duplicateUser) {
           // 중복 발견 - 모달 표시
-          setPendingDetection(result.detection);
+          setPendingDescriptor(result.detection.descriptor);
           setPendingImageData(result.imageData);
           setDuplicateUser(result.duplicateUser);
           setDuplicateConfidence(result.confidence);
@@ -95,7 +90,7 @@ export function useUserFormCapture(
         }
       }
     } catch (err) {
-      console.error('캡처 실패:', err);
+      log.error('Capture failed', 'handleCapture', undefined, err);
       setError('캡처 중 오류가 발생했습니다');
     } finally {
       setIsCapturing(false);
@@ -111,7 +106,7 @@ export function useUserFormCapture(
   const closeDuplicateModal = () => {
     setShowDuplicateModal(false);
     setDuplicateUser(null);
-    setPendingDetection(null);
+    setPendingDescriptor(null);
     setPendingImageData(null);
   };
 
@@ -126,7 +121,7 @@ export function useUserFormCapture(
     showDuplicateModal,
     duplicateUser,
     duplicateConfidence,
-    pendingDetection,
+    pendingDescriptor,
     pendingImageData,
 
     // 액션

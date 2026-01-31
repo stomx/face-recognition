@@ -11,6 +11,9 @@ import { useUserRepository, useAccessLogRepository, useFaceMatchRepository } fro
 import { verifyFace } from '../lib/verifyFace';
 import type { ScanResult, VerificationResult } from './types';
 import { TIMING } from './types';
+import { debug } from '@/shared/lib/debug';
+
+const log = debug.scope('VerificationMachine');
 
 type Phase = 'idle' | 'scanning' | 'result';
 
@@ -133,7 +136,7 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
   const verify = useCallback((scan: ScanResult) => {
     // ★★★ 동기 체크: phaseRef가 scanning이 아니면 즉시 리턴 ★★★
     if (phaseRef.current !== 'scanning') {
-      console.log('[verify] blocked - phase is', phaseRef.current);
+      log.log('blocked - phase is not scanning', 'verify', { phase: phaseRef.current });
       return;
     }
 
@@ -144,7 +147,7 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
 
     // ★★★ 즉시 ref 업데이트 (이 시점부터 모든 추가 호출 차단) ★★★
     phaseRef.current = 'result';
-    console.log('[verify] phase locked to result');
+    log.log('phase locked to result', 'verify');
 
     // 스캐너 중지
     stopScanner();
@@ -172,12 +175,12 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
     // 5초 후 닫기 애니메이션 시작
     clearTimer();
     timerRef.current = setTimeout(() => {
-      console.log('[verify] 5s passed, starting close animation');
+      log.log('5s passed, starting close animation', 'verify');
       setIsClosing(true);
 
       // 닫기 애니메이션 후 (0.3초) 스캐너 재시작
       timerRef.current = setTimeout(() => {
-        console.log('[verify] close animation done, restarting scanner');
+        log.log('close animation done, restarting scanner', 'verify');
         setIsClosing(false);
         setResult(null);
         setLastScan(null);
@@ -212,6 +215,8 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
     if (lastVerifyKeyRef.current === verifyKey) return;
     lastVerifyKeyRef.current = verifyKey;
 
+    // This is intentional: auto-verify when face detection conditions are met
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     verify(lastScan);
   }, [autoMode, lastScan, minConfidence, verify]);
 
@@ -247,7 +252,7 @@ export function useVerificationMachine(options: VerificationMachineOptions = {})
     };
   }, [clearTimer, stopScanner]);
 
-  const canVerify = phaseRef.current === 'scanning' &&
+  const canVerify = phase === 'scanning' &&
     lastScan?.faceDetected === true &&
     lastScan?.faceBox != null &&
     lastScan.faceBox.height >= TIMING.MIN_FACE_HEIGHT;

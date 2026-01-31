@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import { CameraView } from '@/widgets/camera-view';
 import { PrimaryButton } from '@/shared/ui';
 import { useFaceRegistration, DuplicateCheckModal } from '@/features/face-registration';
@@ -9,7 +10,6 @@ import type { User } from '@/shared/types';
 import type { IUserRepository } from '@/shared/types/repository';
 import type { IUserFormStrategy } from '../strategies';
 import { CreateUserStrategy, UpdateUserStrategy } from '../strategies';
-import * as faceapi from '@vladmandic/face-api';
 
 // Hooks
 import { useUserFormCamera, useUserFormCapture } from './hooks';
@@ -50,12 +50,12 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
   const capture = useUserFormCapture(camera.videoRef, camera.canvasRef, modelStatus, user);
 
   // 중복 확인 - 같은 사람
-  const handleConfirmSamePerson = () => {
-    if (!capture.duplicateUser || !capture.pendingDetection || !capture.pendingImageData) return;
+  const handleConfirmSamePerson = useCallback(() => {
+    if (!capture.duplicateUser || !capture.pendingDescriptor || !capture.pendingImageData) return;
 
     const success = addFaceToUserWithData(
       capture.duplicateUser.id,
-      capture.pendingDetection,
+      capture.pendingDescriptor,
       capture.pendingImageData
     );
 
@@ -64,37 +64,37 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
       onSuccess();
       onClose();
     }
-  };
+  }, [addFaceToUserWithData, capture, onSuccess, onClose]);
 
   // 중복 확인 - 다른 사람
-  const handleConfirmDifferentPerson = () => {
-    if (!capture.pendingDetection || !capture.pendingImageData || !name.trim()) return;
+  const handleConfirmDifferentPerson = useCallback(() => {
+    if (!capture.pendingDescriptor || !capture.pendingImageData || !name.trim()) return;
 
-    const success = registerFaceWithData(name.trim(), capture.pendingDetection, capture.pendingImageData);
+    const success = registerFaceWithData(name.trim(), capture.pendingDescriptor, capture.pendingImageData);
 
     if (success) {
       capture.closeDuplicateModal();
       onSuccess();
       onClose();
     }
-  };
+  }, [capture, name, registerFaceWithData, onSuccess, onClose]);
 
   // 캡처 후 카메라 종료
-  const handleCaptureWithCameraOff = async () => {
+  const handleCaptureWithCameraOff = useCallback(async () => {
     await capture.handleCapture();
     if (capture.capturedImage) {
       camera.turnOffCamera();
     }
-  };
+  }, [capture, camera]);
 
   // 재촬영
-  const handleRetake = () => {
+  const handleRetake = useCallback(() => {
     capture.handleRetake();
     camera.turnOnCamera();
-  };
+  }, [capture, camera]);
 
   // 폼 제출 (전략 패턴 사용)
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!name.trim()) {
       return;
     }
@@ -114,7 +114,7 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
       onSuccess();
       onClose();
     }
-  };
+  }, [name, capture.capturedDescriptor, capture.capturedImage, strategy, onSuccess, onClose]);
 
   return (
     <>
@@ -167,7 +167,7 @@ export function UserFormModal({ user, modelStatus, onSuccess, onClose }: UserFor
                 {capture.capturedImage && !camera.isCameraOn ? (
                   <div className="space-y-4">
                     <div className="rounded-lg overflow-hidden bg-black">
-                      <img src={capture.capturedImage} alt="캡처된 얼굴" className="w-full h-auto" />
+                      <Image src={capture.capturedImage} alt="캡처된 얼굴" width={400} height={300} className="w-full h-auto" />
                     </div>
                     <PrimaryButton onClick={handleRetake} variant="gray" className="w-full">
                       다시 촬영

@@ -47,6 +47,8 @@ export function CameraControlPanel({
     if (maxResolution >= 1920) resolutions.push('fhd');
     if (maxResolution >= 2560) resolutions.push('qhd');
 
+    // One-time initialization: detect available resolutions based on screen size
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAvailableResolutions(resolutions);
   }, []);
 

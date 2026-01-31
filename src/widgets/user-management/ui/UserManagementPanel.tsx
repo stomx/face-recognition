@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useUserRepository } from '@/entities/user';
 import { ConfirmDialog, PrimaryButton } from '@/shared/ui';
 import Link from 'next/link';
@@ -122,9 +123,11 @@ export function UserManagementPanel() {
 
                     {user.imageData && (
                       <div className="aspect-square rounded-xl overflow-hidden bg-gray-200 border border-gray-300">
-                        <img
+                        <Image
                           src={user.imageData}
                           alt={user.name}
+                          width={300}
+                          height={300}
                           className="w-full h-full object-cover"
                         />
                       </div>

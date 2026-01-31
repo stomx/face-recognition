@@ -1,5 +1,8 @@
 import type { IUserFormStrategy } from './IUserFormStrategy';
 import type { IUserRepository } from '@/shared/types/repository';
+import { debug } from '@/shared/lib/debug';
+
+const log = debug.scope('UpdateUserStrategy');
 
 /**
  * 사용자 수정 전략
@@ -13,7 +16,7 @@ export class UpdateUserStrategy implements IUserFormStrategy {
       this.userRepo.update(this.userId, name, descriptor, imageData);
       return true;
     } catch (err) {
-      console.error('User update error:', err);
+      log.error('User update failed', 'submit', { userId: this.userId, name }, err);
       return false;
     }
   }

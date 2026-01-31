@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useUserRepository, useAccessLogRepository, useHydration } from '@/entities/user';
 import { useFaceDetection } from '@/features/face-detection';
 import { useVerificationMachine } from '@/features/face-verification';
 import { CameraView } from '@/widgets/camera-view';
-import { TIMING } from '@/features/face-verification/model/types';
 import {
   TimeDisplay,
   LoadingSpinner,
@@ -41,30 +40,81 @@ export function HomePage() {
   }, [hydrate, initializeModels]);
 
   // 카메라 준비 핸들러
-  const handleVideoReady = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
+  const handleVideoReady = useCallback((video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
     videoReadyRef.current = true;
 
     if (modelStatus === 'loaded' && users.length > 0) {
       machine.start(video, canvas);
     }
-  };
+  }, [modelStatus, users.length, machine]);
 
   // 모델 로드 완료 시 스캔 시작
-  useEffect(() => {
-    if (modelStatus === 'loaded' && users.length > 0 && videoReadyRef.current && machine.isIdle) {
-      // 비디오와 캔버스 ref는 CameraView에서 관리되므로 별도 처리 필요 없음
-    }
-  }, [modelStatus, users.length, machine.isIdle]);
+  // 비디오와 캔버스 ref는 CameraView에서 관리되므로 별도 처리 필요 없음
 
   // 자동 모드 변경 시 처리
-  useEffect(() => {
-    // 자동 모드 꺼질 때 정지하지 않음 (스캔은 계속 유지)
-    // 자동 모드 여부는 useVerificationMachine의 autoMode 옵션으로 이미 전달됨
-  }, [isAutoMode]);
+  // 자동 모드 꺼질 때 정지하지 않음 (스캔은 계속 유지)
+  // 자동 모드 여부는 useVerificationMachine의 autoMode 옵션으로 이미 전달됨
 
-  const handleStopVerification = () => {
+  const handleStopVerification = useCallback(() => {
     machine.stop();
-  };
+  }, [machine]);
+
+  // Computed values (before early return to satisfy hooks rules)
+  const todaySuccessCount = useMemo(
+    () => accessLogs.filter(l => l.status === 'success').length,
+    [accessLogs]
+  );
+  const todayFailCount = useMemo(
+    () => accessLogs.filter(l => l.status === 'failed').length,
+    [accessLogs]
+  );
+
+  // 결과 데이터
+  const verifyResult = machine.result;
+
+  // 디스플레이 크기 계산
+  const { displayWidth, displayHeight } = useMemo(() => {
+    const displaySize = RESOLUTION_MAP[resolution];
+    return {
+      displayWidth: orientation === 'landscape' ? displaySize.width : displaySize.height,
+      displayHeight: orientation === 'landscape' ? displaySize.height : displaySize.width,
+    };
+  }, [resolution, orientation]);
+
+  const handleSettingsChange = useCallback((changes: {
+    isAutoMode?: boolean;
+    resolution?: Resolution;
+    orientation?: Orientation;
+  }) => {
+    if (changes.isAutoMode !== undefined) setIsAutoMode(changes.isAutoMode);
+    if (changes.resolution !== undefined) setResolution(changes.resolution);
+    if (changes.orientation !== undefined) setOrientation(changes.orientation);
+  }, []);
+
+  // SettingsPanel props (useMemo로 재생성 방지)
+  const settingsPanelModalProps = useMemo(() => ({
+    isOpen: showSettings,
+    onClose: () => setShowSettings(false),
+    variant: 'modal' as const,
+  }), [showSettings]);
+
+  const settingsPanelSettingsProps = useMemo(() => ({
+    current: {
+      isAutoMode,
+      resolution,
+      orientation,
+    },
+    onChange: handleSettingsChange,
+  }), [isAutoMode, resolution, orientation, handleSettingsChange]);
+
+  const settingsPanelContextProps = useMemo(() => ({
+    stats: {
+      usersCount: users.length,
+      todaySuccessCount,
+      todayFailCount,
+    },
+    modelStatus,
+  }), [users.length, todaySuccessCount, todayFailCount, modelStatus]);
 
   if (!isHydrated) {
     return (
@@ -73,23 +123,6 @@ export function HomePage() {
       </div>
     );
   }
-
-  const todaySuccessCount = accessLogs.filter(l => l.status === 'success').length;
-  const todayFailCount = accessLogs.filter(l => l.status === 'failed').length;
-
-  // 파생 상태
-  const faceDetected = machine.lastScan?.faceDetected || false;
-  const faceBox = machine.lastScan?.faceBox;
-  const isTooFar = faceBox && faceBox.height < TIMING.MIN_FACE_HEIGHT;
-  const isGoodDistance = faceBox && faceBox.height >= TIMING.MIN_FACE_HEIGHT;
-
-  // 결과 데이터
-  const verifyResult = machine.result;
-
-  // 디스플레이 크기 계산
-  const displaySize = RESOLUTION_MAP[resolution];
-  const displayWidth = orientation === 'landscape' ? displaySize.width : displaySize.height;
-  const displayHeight = orientation === 'landscape' ? displaySize.height : displaySize.width;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 flex items-center justify-center p-8">
@@ -222,31 +255,9 @@ export function HomePage() {
 
       {/* 설정 패널 - ISP 적용된 그룹화 Props */}
       <SettingsPanel
-        modal={{
-          isOpen: showSettings,
-          onClose: () => setShowSettings(false),
-          variant: 'modal',
-        }}
-        settings={{
-          current: {
-            isAutoMode,
-            resolution,
-            orientation,
-          },
-          onChange: (changes) => {
-            if (changes.isAutoMode !== undefined) setIsAutoMode(changes.isAutoMode);
-            if (changes.resolution !== undefined) setResolution(changes.resolution);
-            if (changes.orientation !== undefined) setOrientation(changes.orientation);
-          },
-        }}
-        context={{
-          stats: {
-            usersCount: users.length,
-            todaySuccessCount,
-            todayFailCount,
-          },
-          modelStatus,
-        }}
+        modal={settingsPanelModalProps}
+        settings={settingsPanelSettingsProps}
+        context={settingsPanelContextProps}
       />
 
       <style jsx global>{`
