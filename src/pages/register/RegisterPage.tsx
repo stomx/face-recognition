@@ -9,7 +9,7 @@ import { CameraView } from '@/widgets/camera-view';
 import { Card, CardHeader, CardBody, Button, Input, Badge, LoadingSpinner, EmptyState } from '@/shared/ui';
 
 export function RegisterPage() {
-  const { users, isHydrated, hydrate, removeUser } = useUserStore();
+  const { users, isHydrated, hydrate, removeUser, removeFaceFromUser } = useUserStore();
   const { modelStatus, initializeModels, startContinuousDetection, stopContinuousDetection } =
     useFaceDetection();
   const { isRegistering, registrationError, registerFace, addFaceToExistingUser, clearError } =
@@ -77,6 +77,10 @@ export function RegisterPage() {
     if (window.confirm('정말로 이 사용자를 삭제하시겠습니까?')) {
       removeUser(id);
     }
+  };
+
+  const handleDeleteFace = (userId: string, faceIndex: number) => {
+    removeFaceFromUser(userId, faceIndex);
   };
 
   if (!isHydrated) {
@@ -307,6 +311,7 @@ export function RegisterPage() {
                         key={user.id}
                         user={user}
                         onDelete={handleDeleteUser}
+                        onDeleteFace={handleDeleteFace}
                       />
                     ))}
                   </div>

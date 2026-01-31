@@ -20,6 +20,7 @@ export function saveUsers(users: User[]): void {
   const serialized = users.map((user) => ({
     ...user,
     faceDescriptors: user.faceDescriptors.map(float32ArrayToArray),
+    faceImages: user.faceImages,
     registeredAt: user.registeredAt.toISOString(),
   }));
 
@@ -40,6 +41,7 @@ export function loadUsers(): User[] {
       name: string;
       faceDescriptors?: number[][];
       faceDescriptor?: number[]; // 기존 데이터 호환성
+      faceImages?: string[];
       registeredAt: string;
       imageData?: string;
     }) => ({
@@ -50,6 +52,8 @@ export function loadUsers(): User[] {
         : user.faceDescriptor
         ? [arrayToFloat32Array(user.faceDescriptor)]
         : [],
+      // 기존 imageData를 faceImages로 변환
+      faceImages: user.faceImages || (user.imageData ? [user.imageData] : []),
       registeredAt: new Date(user.registeredAt),
     }));
   } catch {

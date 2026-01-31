@@ -84,8 +84,17 @@ export function useFaceRegistration() {
           return false;
         }
 
+        // 얼굴 이미지 캡처
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
+        }
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
         // 기존 사용자에게 얼굴 추가
-        addFaceToUser(existingUser.id, detection.descriptor);
+        addFaceToUser(existingUser.id, detection.descriptor, imageData);
 
         return true;
       } catch (err) {

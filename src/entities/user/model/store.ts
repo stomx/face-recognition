@@ -19,7 +19,8 @@ interface UserState {
   // Actions
   hydrate: () => void;
   addUser: (name: string, faceDescriptor: Float32Array, imageData?: string) => User;
-  addFaceToUser: (userId: string, faceDescriptor: Float32Array) => void;
+  addFaceToUser: (userId: string, faceDescriptor: Float32Array, imageData: string) => void;
+  removeFaceFromUser: (userId: string, faceIndex: number) => void;
   updateUser: (id: string, name: string, faceDescriptor?: Float32Array, imageData?: string) => void;
   removeUser: (id: string) => void;
   getUserById: (id: string) => User | undefined;
@@ -49,9 +50,10 @@ export const useUserStore = create<UserState>((set, get) => ({
     const newUser: User = {
       id: uuidv4(),
       name,
-      faceDescriptors: [faceDescriptor], // 배열로 저장
+      faceDescriptors: [faceDescriptor],
+      faceImages: imageData ? [imageData] : [],
       registeredAt: new Date(),
-      imageData,
+      imageData, // 호환성용
     };
 
     const updatedUsers = [...get().users, newUser];
@@ -61,15 +63,41 @@ export const useUserStore = create<UserState>((set, get) => ({
     return newUser;
   },
 
-  addFaceToUser: (userId, faceDescriptor) => {
+  addFaceToUser: (userId, faceDescriptor, imageData) => {
     const updatedUsers = get().users.map((user) =>
       user.id === userId
         ? {
             ...user,
             faceDescriptors: [...user.faceDescriptors, faceDescriptor],
+            faceImages: [...user.faceImages, imageData],
           }
         : user
     );
+    set({ users: updatedUsers });
+    saveUsers(updatedUsers);
+  },
+
+  removeFaceFromUser: (userId, faceIndex) => {
+    const updatedUsers = get().users.map((user) => {
+      if (user.id === userId) {
+        const newDescriptors = user.faceDescriptors.filter((_, idx) => idx !== faceIndex);
+        const newImages = user.faceImages.filter((_, idx) => idx !== faceIndex);
+
+        // 모든 얼굴이 삭제되면 사용자도 삭제
+        if (newDescriptors.length === 0) {
+          return null;
+        }
+
+        return {
+          ...user,
+          faceDescriptors: newDescriptors,
+          faceImages: newImages,
+          imageData: newImages[0], // 첫 번째 이미지를 대표 이미지로
+        };
+      }
+      return user;
+    }).filter(Boolean) as User[];
+
     set({ users: updatedUsers });
     saveUsers(updatedUsers);
   },
