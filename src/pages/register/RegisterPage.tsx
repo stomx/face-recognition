@@ -12,11 +12,13 @@ export function RegisterPage() {
   const { users, isHydrated, hydrate, removeUser } = useUserStore();
   const { modelStatus, initializeModels, startContinuousDetection, stopContinuousDetection } =
     useFaceDetection();
-  const { isRegistering, registrationError, registerFace, clearError } =
+  const { isRegistering, registrationError, registerFace, addFaceToExistingUser, clearError } =
     useFaceRegistration();
 
   const [name, setName] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isAddingToExisting, setIsAddingToExisting] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -50,10 +52,22 @@ export function RegisterPage() {
     if (!videoRef.current || !canvasRef.current) return;
 
     clearError();
-    const success = await registerFace(videoRef.current, canvasRef.current, name);
+    let success = false;
+
+    if (isAddingToExisting) {
+      // 기존 사용자에게 얼굴 추가
+      const selectedUser = users.find(u => u.id === selectedUserId);
+      if (selectedUser) {
+        success = await addFaceToExistingUser(videoRef.current, canvasRef.current, selectedUser.name);
+      }
+    } else {
+      // 새 사용자 등록
+      success = await registerFace(videoRef.current, canvasRef.current, name);
+    }
 
     if (success) {
       setName('');
+      setSelectedUserId('');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     }
@@ -138,14 +152,67 @@ export function RegisterPage() {
                 <h2 className="text-base portrait:text-lg xl:text-lg 2xl:text-xl 3xl:text-2xl font-semibold text-gray-900">얼굴 등록</h2>
               </CardHeader>
               <CardBody className="space-y-3 portrait:space-y-4 xl:space-y-4 2xl:space-y-5 3xl:space-y-6 p-3 portrait:p-4 xl:p-4 2xl:p-5 3xl:p-6">
-                <Input
-                  label="이름"
-                  placeholder="등록할 사용자의 이름을 입력하세요"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  error={registrationError || undefined}
-                  className="text-sm portrait:text-base xl:text-base 2xl:text-lg 3xl:text-xl"
-                />
+                {/* 등록 모드 선택 */}
+                <div className="flex items-center gap-4 p-3 portrait:p-4 bg-gray-50 rounded-lg">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={!isAddingToExisting}
+                      onChange={() => {
+                        setIsAddingToExisting(false);
+                        setSelectedUserId('');
+                      }}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-xs portrait:text-sm xl:text-sm 2xl:text-base font-medium">새 사용자</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={isAddingToExisting}
+                      onChange={() => setIsAddingToExisting(true)}
+                      className="w-4 h-4 text-blue-600"
+                      disabled={users.length === 0}
+                    />
+                    <span className="text-xs portrait:text-sm xl:text-sm 2xl:text-base font-medium">기존 사용자에 추가</span>
+                  </label>
+                </div>
+
+                {/* 새 사용자 입력 */}
+                {!isAddingToExisting && (
+                  <Input
+                    label="이름"
+                    placeholder="등록할 사용자의 이름을 입력하세요"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={registrationError || undefined}
+                    className="text-sm portrait:text-base xl:text-base 2xl:text-lg 3xl:text-xl"
+                  />
+                )}
+
+                {/* 기존 사용자 선택 */}
+                {isAddingToExisting && (
+                  <div className="space-y-2">
+                    <label className="block text-xs portrait:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700">
+                      사용자 선택
+                    </label>
+                    <select
+                      value={selectedUserId}
+                      onChange={(e) => setSelectedUserId(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs portrait:text-sm xl:text-sm 2xl:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">사용자를 선택하세요</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name} ({user.faceDescriptors.length}개 얼굴 등록됨)
+                        </option>
+                      ))}
+                    </select>
+                    {registrationError && (
+                      <p className="text-xs portrait:text-sm text-red-600">{registrationError}</p>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex gap-2 portrait:gap-3 xl:gap-3 2xl:gap-4">
                   <Button
@@ -155,12 +222,13 @@ export function RegisterPage() {
                     disabled={
                       modelStatus !== 'loaded' ||
                       isRegistering ||
-                      !name.trim() ||
+                      (!isAddingToExisting && !name.trim()) ||
+                      (isAddingToExisting && !selectedUserId) ||
                       !videoRef.current
                     }
                     isLoading={isRegistering}
                   >
-                    {isRegistering ? '등록 중...' : '얼굴 등록'}
+                    {isRegistering ? '등록 중...' : (isAddingToExisting ? '얼굴 추가' : '얼굴 등록')}
                   </Button>
                 </div>
 

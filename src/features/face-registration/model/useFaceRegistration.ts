@@ -7,7 +7,7 @@ import { detectFace } from '@/shared/lib/face-api';
 export function useFaceRegistration() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
-  const { addUser } = useUserStore();
+  const { addUser, addFaceToUser, getUserByName } = useUserStore();
 
   const registerFace = useCallback(
     async (
@@ -56,6 +56,49 @@ export function useFaceRegistration() {
     [addUser]
   );
 
+  const addFaceToExistingUser = useCallback(
+    async (
+      video: HTMLVideoElement,
+      canvas: HTMLCanvasElement,
+      name: string
+    ): Promise<boolean> => {
+      if (!name.trim()) {
+        setRegistrationError('이름을 입력해주세요.');
+        return false;
+      }
+
+      const existingUser = getUserByName(name.trim());
+      if (!existingUser) {
+        setRegistrationError('해당 사용자를 찾을 수 없습니다.');
+        return false;
+      }
+
+      setIsRegistering(true);
+      setRegistrationError(null);
+
+      try {
+        const detection = await detectFace(video);
+
+        if (!detection) {
+          setRegistrationError('얼굴을 감지할 수 없습니다. 카메라를 정면으로 바라봐주세요.');
+          return false;
+        }
+
+        // 기존 사용자에게 얼굴 추가
+        addFaceToUser(existingUser.id, detection.descriptor);
+
+        return true;
+      } catch (err) {
+        console.error('Face addition error:', err);
+        setRegistrationError('얼굴 추가 중 오류가 발생했습니다. 다시 시도해주세요.');
+        return false;
+      } finally {
+        setIsRegistering(false);
+      }
+    },
+    [addFaceToUser, getUserByName]
+  );
+
   const clearError = useCallback(() => {
     setRegistrationError(null);
   }, []);
@@ -64,6 +107,7 @@ export function useFaceRegistration() {
     isRegistering,
     registrationError,
     registerFace,
+    addFaceToExistingUser,
     clearError,
   };
 }

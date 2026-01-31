@@ -19,9 +19,11 @@ interface UserState {
   // Actions
   hydrate: () => void;
   addUser: (name: string, faceDescriptor: Float32Array, imageData?: string) => User;
+  addFaceToUser: (userId: string, faceDescriptor: Float32Array) => void;
   updateUser: (id: string, name: string, faceDescriptor?: Float32Array, imageData?: string) => void;
   removeUser: (id: string) => void;
   getUserById: (id: string) => User | undefined;
+  getUserByName: (name: string) => User | undefined;
   getLabeledDescriptors: () => faceapi.LabeledFaceDescriptors[];
   addAccessLog: (
     userId: string | null,
@@ -47,7 +49,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     const newUser: User = {
       id: uuidv4(),
       name,
-      faceDescriptor,
+      faceDescriptors: [faceDescriptor], // 배열로 저장
       registeredAt: new Date(),
       imageData,
     };
@@ -59,13 +61,26 @@ export const useUserStore = create<UserState>((set, get) => ({
     return newUser;
   },
 
+  addFaceToUser: (userId, faceDescriptor) => {
+    const updatedUsers = get().users.map((user) =>
+      user.id === userId
+        ? {
+            ...user,
+            faceDescriptors: [...user.faceDescriptors, faceDescriptor],
+          }
+        : user
+    );
+    set({ users: updatedUsers });
+    saveUsers(updatedUsers);
+  },
+
   updateUser: (id, name, faceDescriptor, imageData) => {
     const updatedUsers = get().users.map((user) =>
       user.id === id
         ? {
             ...user,
             name,
-            ...(faceDescriptor && { faceDescriptor }),
+            ...(faceDescriptor && { faceDescriptors: [faceDescriptor] }), // 단일 descriptor로 교체
             ...(imageData !== undefined && { imageData }),
           }
         : user
@@ -84,9 +99,14 @@ export const useUserStore = create<UserState>((set, get) => ({
     return get().users.find((user) => user.id === id);
   },
 
+  getUserByName: (name) => {
+    return get().users.find((user) => user.name.toLowerCase() === name.toLowerCase());
+  },
+
   getLabeledDescriptors: () => {
+    // 각 사용자의 모든 얼굴 descriptors를 포함
     return get().users.map((user) =>
-      createLabeledDescriptor(user.id, user.faceDescriptor)
+      createLabeledDescriptor(user.id, user.faceDescriptors)
     );
   },
 

@@ -2,9 +2,9 @@
 export interface User {
   id: string;
   name: string;
-  faceDescriptor: Float32Array;
+  faceDescriptors: Float32Array[]; // 여러 얼굴 등록 지원
   registeredAt: Date;
-  imageData?: string; // Base64 encoded face image
+  imageData?: string; // Base64 encoded face image (대표 이미지)
 }
 
 // 인증 로그 타입

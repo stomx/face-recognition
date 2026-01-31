@@ -43,6 +43,9 @@ export function UserCard({ user, onDelete }: UserCardProps) {
           <p className="text-[10px] portrait:text-xs xl:text-sm 2xl:text-base 3xl:text-lg text-gray-500">
             등록일: {formatDate(user.registeredAt)}
           </p>
+          <p className="text-[10px] portrait:text-xs xl:text-sm 2xl:text-base 3xl:text-lg text-blue-600 font-medium">
+            등록된 얼굴: {user.faceDescriptors.length}개
+          </p>
         </div>
 
         {onDelete && (

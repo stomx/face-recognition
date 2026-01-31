@@ -92,9 +92,10 @@ export function findBestMatch(
 // LabeledFaceDescriptors 생성 헬퍼
 export function createLabeledDescriptor(
   label: string,
-  descriptor: Float32Array
+  descriptors: Float32Array | Float32Array[]
 ): faceapi.LabeledFaceDescriptors {
-  return new faceapi.LabeledFaceDescriptors(label, [descriptor]);
+  const descriptorArray = Array.isArray(descriptors) ? descriptors : [descriptors];
+  return new faceapi.LabeledFaceDescriptors(label, descriptorArray);
 }
 
 // faceapi 인스턴스 export
