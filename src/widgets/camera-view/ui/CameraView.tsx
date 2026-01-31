@@ -83,9 +83,15 @@ export function CameraView({
             setIsStreaming(true);
 
             if (canvasRef.current) {
-              canvasRef.current.width = video.videoWidth;
-              canvasRef.current.height = video.videoHeight;
-              onVideoReadyRef.current?.(video, canvasRef.current);
+              // 약간의 지연 후 정확한 크기 측정
+              setTimeout(() => {
+                if (canvasRef.current && videoRef.current) {
+                  const rect = videoRef.current.getBoundingClientRect();
+                  canvasRef.current.width = rect.width;
+                  canvasRef.current.height = rect.height;
+                  onVideoReadyRef.current?.(videoRef.current, canvasRef.current);
+                }
+              }, 100);
             }
           } catch (playError) {
             // AbortError는 무시 (새로운 로드 요청으로 인한 중단)
