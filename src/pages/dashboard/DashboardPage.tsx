@@ -178,10 +178,10 @@ export function DashboardPage() {
   const displayHeight = orientation === 'landscape' ? displaySize.height : displaySize.width;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 flex items-center justify-center p-4 lg:p-8">
-      {/* 보안 컨트롤 센터 프레임 */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50 flex items-center justify-center p-4 lg:p-8">
+      {/* 대시보드 프레임 */}
       <div
-        className="shadow-[0_0_80px_rgba(59,130,246,0.15)] rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-blue-500/20"
+        className="shadow-2xl rounded-3xl overflow-hidden bg-white border border-gray-200"
         style={{
           width: `${displayWidth}px`,
           height: `${displayHeight}px`,
@@ -191,20 +191,20 @@ export function DashboardPage() {
       >
         {/* 메인 레이아웃 - 방향에 따라 완전히 다른 UI */}
         {orientation === 'portrait' ? (
-          /* 세로 모드 - 모바일 시큐리티 키오스크 UI */
-          <div className="flex flex-col h-full relative bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+          /* 세로 모드 */
+          <div className="flex flex-col h-full relative bg-white">
             {/* 상단 헤더 */}
-            <div className="px-4 py-3 flex items-center justify-between bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-blue-500/20">
+            <div className="px-4 py-3 flex items-center justify-between bg-white border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-white font-bold text-base tracking-wide" style={{ fontFamily: 'ui-monospace, monospace' }}>SECURITY KIOSK</h1>
-                  <p className="text-blue-400 text-[10px] tracking-widest" style={{ fontFamily: 'ui-monospace, monospace' }}>ACCESS CONTROL</p>
+                  <h1 className="text-gray-900 font-bold text-base">얼굴 인식 관리</h1>
+                  <p className="text-gray-500 text-[10px]">출입 통제 시스템</p>
                 </div>
               </div>
               <IconButton
@@ -214,31 +214,31 @@ export function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                 }
-                className="bg-slate-800/50 hover:bg-slate-800 border border-blue-500/20 hover:border-blue-500/40 shadow-none text-blue-400"
+                className="bg-gray-100 hover:bg-gray-200 border border-gray-200 hover:border-gray-300 shadow-none text-gray-600"
               />
             </div>
 
-            {/* 실시간 통계 - 컴팩트 */}
+            {/* 실시간 통계 */}
             <div className="px-4 py-2">
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-2.5 text-center">
-                  <div className="text-xl font-bold text-green-400" style={{ fontFamily: 'ui-monospace, monospace' }}>{todaySuccessCount}</div>
-                  <div className="text-[9px] text-green-500/70 font-bold tracking-wider mt-0.5" style={{ fontFamily: 'ui-monospace, monospace' }}>APPROVED</div>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 text-center">
+                  <div className="text-xl font-bold text-green-600">{todaySuccessCount}</div>
+                  <div className="text-[9px] text-green-600 font-semibold mt-0.5">승인</div>
                 </div>
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-2.5 text-center">
-                  <div className="text-xl font-bold text-red-400" style={{ fontFamily: 'ui-monospace, monospace' }}>{todayFailCount}</div>
-                  <div className="text-[9px] text-red-500/70 font-bold tracking-wider mt-0.5" style={{ fontFamily: 'ui-monospace, monospace' }}>DENIED</div>
+                <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 text-center">
+                  <div className="text-xl font-bold text-red-600">{todayFailCount}</div>
+                  <div className="text-[9px] text-red-600 font-semibold mt-0.5">거부</div>
                 </div>
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-2.5 text-center">
-                  <div className="text-xl font-bold text-blue-400" style={{ fontFamily: 'ui-monospace, monospace' }}>{users.length}</div>
-                  <div className="text-[9px] text-blue-500/70 font-bold tracking-wider mt-0.5" style={{ fontFamily: 'ui-monospace, monospace' }}>USERS</div>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-2.5 text-center">
+                  <div className="text-xl font-bold text-blue-600">{users.length}</div>
+                  <div className="text-[9px] text-blue-600 font-semibold mt-0.5">사용자</div>
                 </div>
               </div>
             </div>
 
-            {/* 카메라 영역 - 중심 */}
+            {/* 카메라 영역 */}
             <div className="px-4 py-2 flex-shrink-0">
-              <div className="bg-black rounded-2xl overflow-hidden border border-blue-500/20 shadow-lg shadow-blue-500/10 aspect-video relative">
+              <div className="bg-black rounded-2xl overflow-hidden border border-gray-200 shadow-lg aspect-video relative">
                 <CameraView
                   key={`${resolution}-${orientation}-${isCameraOn}`}
                   onVideoReady={handleVideoReady}
@@ -249,9 +249,9 @@ export function DashboardPage() {
                   orientation={orientation}
                 />
                 {isCameraOn && (
-                  <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm border border-red-500/30">
-                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-500/50" />
-                    <span className="text-white text-[9px] font-bold tracking-wider" style={{ fontFamily: 'ui-monospace, monospace' }}>LIVE</span>
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm border border-red-400">
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                    <span className="text-white text-[9px] font-semibold">라이브</span>
                   </div>
                 )}
               </div>
@@ -259,37 +259,36 @@ export function DashboardPage() {
 
             {/* 출입 기록 미리보기 */}
             <div className="flex-1 px-4 py-2 min-h-0 overflow-y-auto custom-scrollbar">
-              <div className="bg-slate-800/30 rounded-2xl border border-blue-500/20 shadow-sm p-3 backdrop-blur-sm">
-                <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2.5" style={{ fontFamily: 'ui-monospace, monospace' }}>RECENT ACTIVITY</h3>
+              <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-sm p-3">
+                <h3 className="text-xs font-bold text-gray-700 mb-2.5">최근 활동</h3>
                 <div className="space-y-1.5">
                   {useUserStore.getState().accessLogs.slice(0, 3).map((log) => (
                     <div
                       key={log.id}
-                      className={`p-2 rounded-lg border backdrop-blur-sm ${
+                      className={`p-2 rounded-lg border ${
                         log.status === 'success'
-                          ? 'bg-green-500/10 border-green-500/30'
-                          : 'bg-red-500/10 border-red-500/30'
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-red-50 border-red-200'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className={`font-bold text-xs truncate ${log.status === 'success' ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'ui-monospace, monospace' }}>
-                              {log.userName || 'UNKNOWN'}
+                            <span className={`font-semibold text-xs truncate ${log.status === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+                              {log.userName || '미확인'}
                             </span>
                             <span
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold tracking-wider ${
+                              className={`px-1 py-0.5 rounded text-[8px] font-semibold ${
                                 log.status === 'success'
                                   ? 'bg-green-500 text-white'
                                   : 'bg-red-500 text-white'
                               }`}
-                              style={{ fontFamily: 'ui-monospace, monospace' }}
                             >
-                              {log.status === 'success' ? 'OK' : 'NO'}
+                              {log.status === 'success' ? '승인' : '거부'}
                             </span>
                           </div>
-                          <div className="text-[9px] text-slate-400 mt-0.5" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                            {new Date(log.timestamp).toLocaleTimeString('en-US', {
+                          <div className="text-[9px] text-gray-500 mt-0.5">
+                            {new Date(log.timestamp).toLocaleTimeString('ko-KR', {
                               hour: '2-digit',
                               minute: '2-digit',
                               hour12: false
@@ -297,7 +296,7 @@ export function DashboardPage() {
                           </div>
                         </div>
                         {log.confidence !== undefined && (
-                          <div className={`text-xs font-bold ml-2 ${log.status === 'success' ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'ui-monospace, monospace' }}>
+                          <div className={`text-xs font-semibold ml-2 ${log.status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
                             {(log.confidence * 100).toFixed(0)}%
                           </div>
                         )}
@@ -306,28 +305,27 @@ export function DashboardPage() {
                   ))}
                   {useUserStore.getState().accessLogs.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
-                      <svg className="w-10 h-10 text-blue-500/20 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <p className="text-blue-500/40 text-[10px] font-semibold" style={{ fontFamily: 'ui-monospace, monospace' }}>NO ACTIVITY</p>
+                      <p className="text-gray-400 text-[10px] font-semibold">활동 기록 없음</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* 하단 컨트롤 - 큰 터치 영역 */}
+            {/* 하단 컨트롤 */}
             <div className="px-4 pb-4 space-y-2 flex-shrink-0">
-              {/* 수동 인증 버튼 - 매우 크게 */}
+              {/* 수동 인증 버튼 */}
               <button
                 onClick={handleManualAuth}
                 disabled={!isCameraOn || isAuthenticating}
-                className={`w-full py-4 rounded-xl font-bold text-sm tracking-wider transition-all ${
+                className={`w-full py-4 rounded-xl font-bold text-sm transition-all ${
                   !isCameraOn || isAuthenticating
-                    ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/30'
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg'
                 }`}
-                style={{ fontFamily: 'ui-monospace, monospace' }}
               >
                 {isAuthenticating ? (
                   <div className="flex items-center justify-center gap-2">
@@ -335,23 +333,22 @@ export function DashboardPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <span>AUTHENTICATING...</span>
+                    <span>인증 중...</span>
                   </div>
                 ) : (
-                  'MANUAL AUTHENTICATION'
+                  '수동 인증'
                 )}
               </button>
 
               {/* 설정 패널 */}
-              <div className="bg-slate-800/30 rounded-2xl p-3 border border-blue-500/20 space-y-2 backdrop-blur-sm">
+              <div className="bg-gray-50 rounded-2xl p-3 border border-gray-200 space-y-2">
                 {/* 해상도 */}
                 <div>
-                  <label className="block text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ fontFamily: 'ui-monospace, monospace' }}>RESOLUTION</label>
+                  <label className="block text-gray-700 text-[10px] font-semibold mb-1.5">해상도</label>
                   <select
                     value={resolution}
                     onChange={(e) => handleResolutionChange(e.target.value as Resolution)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-blue-500/30 rounded-lg text-white text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    style={{ fontFamily: 'ui-monospace, monospace' }}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   >
                     <option value="hd">1280×720 HD</option>
                     <option value="fhd">1920×1080 FHD</option>
@@ -363,40 +360,37 @@ export function DashboardPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => handleOrientationChange('landscape')}
-                    className="px-3 py-2 rounded-lg border border-blue-500/30 bg-slate-800 text-blue-400 text-xs font-bold tracking-wider hover:bg-slate-700 transition-all"
-                    style={{ fontFamily: 'ui-monospace, monospace' }}
+                    className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-600 text-xs font-semibold hover:bg-gray-50 transition-all"
                   >
-                    LANDSCAPE
+                    가로
                   </button>
                   <button
                     onClick={() => handleOrientationChange('portrait')}
-                    className="px-3 py-2 rounded-lg border border-blue-500 bg-blue-500 text-white text-xs font-bold tracking-wider transition-all"
-                    style={{ fontFamily: 'ui-monospace, monospace' }}
+                    className="px-3 py-2 rounded-lg border border-blue-500 bg-blue-500 text-white text-xs font-semibold transition-all"
                   >
-                    PORTRAIT
+                    세로
                   </button>
                 </div>
 
                 {/* 카메라 토글 */}
                 <button
                   onClick={handleCameraToggle}
-                  className={`w-full py-2.5 rounded-lg font-bold text-xs tracking-wider transition-all ${
+                  className={`w-full py-2.5 rounded-lg font-semibold text-xs transition-all ${
                     isCameraOn
-                      ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
-                      : 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+                      ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+                      : 'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100'
                   }`}
-                  style={{ fontFamily: 'ui-monospace, monospace' }}
                 >
-                  {isCameraOn ? 'CAMERA OFF' : 'CAMERA ON'}
+                  {isCameraOn ? '카메라 끄기' : '카메라 켜기'}
                 </button>
               </div>
             </div>
           </div>
         ) : (
-          /* 가로 모드 - 시큐리티 컨트롤 센터 레이아웃 */
+          /* 가로 모드 */
           <div className="flex flex-col h-full overflow-hidden">
-            {/* 상단 헤더바 - 얇고 기능적 */}
-            <header className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-blue-500/20 px-6 py-3 flex-shrink-0">
+            {/* 상단 헤더바 */}
+            <header className="bg-white border-b border-gray-200 px-6 py-3 flex-shrink-0">
               <div className="flex items-center justify-between">
                 {/* 좌측: 로고 & 시스템 상태 */}
                 <div className="flex items-center gap-6">
@@ -408,52 +402,52 @@ export function DashboardPage() {
                       </svg>
                     </div>
                     <div>
-                      <h1 className="text-white font-bold text-sm tracking-wide" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                        SECURITY CONTROL
+                      <h1 className="text-gray-900 font-bold text-sm">
+                        얼굴 인식 관리
                       </h1>
-                      <p className="text-blue-400 text-[10px] tracking-widest" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                        ACCESS MANAGEMENT SYSTEM
+                      <p className="text-gray-500 text-[10px]">
+                        출입 통제 시스템
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-blue-500/20">
-                    <div className={`w-2 h-2 rounded-full ${modelStatus === 'loaded' ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'} shadow-lg ${modelStatus === 'loaded' ? 'shadow-green-500/50' : 'shadow-yellow-500/50'}`} />
-                    <span className="text-xs font-semibold text-white" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                      {modelStatus === 'loaded' ? 'SYSTEM READY' : 'LOADING...'}
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200">
+                    <div className={`w-2 h-2 rounded-full ${modelStatus === 'loaded' ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+                    <span className="text-xs font-semibold text-gray-700">
+                      {modelStatus === 'loaded' ? '시스템 준비' : '로딩 중...'}
                     </span>
                   </div>
                 </div>
 
                 {/* 중앙: 실시간 통계 */}
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30">
-                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-green-50 border border-green-200">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                     <div>
-                      <div className="text-xs text-green-400 font-bold" style={{ fontFamily: 'ui-monospace, monospace' }}>{todaySuccessCount}</div>
-                      <div className="text-[9px] text-green-500/60 tracking-wider" style={{ fontFamily: 'ui-monospace, monospace' }}>APPROVED</div>
+                      <div className="text-xs text-green-700 font-bold">{todaySuccessCount}</div>
+                      <div className="text-[9px] text-green-600">승인</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30">
-                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-red-50 border border-red-200">
+                    <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     <div>
-                      <div className="text-xs text-red-400 font-bold" style={{ fontFamily: 'ui-monospace, monospace' }}>{todayFailCount}</div>
-                      <div className="text-[9px] text-red-500/60 tracking-wider" style={{ fontFamily: 'ui-monospace, monospace' }}>DENIED</div>
+                      <div className="text-xs text-red-700 font-bold">{todayFailCount}</div>
+                      <div className="text-[9px] text-red-600">거부</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-blue-50 border border-blue-200">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                     <div>
-                      <div className="text-xs text-blue-400 font-bold" style={{ fontFamily: 'ui-monospace, monospace' }}>{users.length}</div>
-                      <div className="text-[9px] text-blue-500/60 tracking-wider" style={{ fontFamily: 'ui-monospace, monospace' }}>USERS</div>
+                      <div className="text-xs text-blue-700 font-bold">{users.length}</div>
+                      <div className="text-[9px] text-blue-600">사용자</div>
                     </div>
                   </div>
                 </div>
@@ -461,10 +455,10 @@ export function DashboardPage() {
                 {/* 우측: 시간 & 홈 버튼 */}
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <div className="text-white text-sm font-bold tracking-wider" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                    <div className="text-gray-900 text-sm font-bold">
                       {new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </div>
-                    <div className="text-blue-400 text-[10px]" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                    <div className="text-gray-500 text-[10px]">
                       {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })}
                     </div>
                   </div>
@@ -475,7 +469,7 @@ export function DashboardPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                       </svg>
                     }
-                    className="bg-slate-800/50 hover:bg-slate-800 border border-blue-500/20 hover:border-blue-500/40 shadow-none text-blue-400"
+                    className="bg-gray-100 hover:bg-gray-200 border border-gray-200 hover:border-gray-300 shadow-none text-gray-600"
                   />
                 </div>
               </div>
@@ -483,9 +477,9 @@ export function DashboardPage() {
 
             {/* 메인 콘텐츠 영역 */}
             <div className="flex-1 flex overflow-hidden">
-              {/* 좌측: 대형 카메라 피드 */}
+              {/* 좌측: 카메라 피드 */}
               <main className="flex-1 p-4 overflow-hidden min-w-0">
-                <div className="h-full bg-black rounded-2xl overflow-hidden shadow-2xl border border-blue-500/20 relative">
+                <div className="h-full bg-black rounded-2xl overflow-hidden shadow-lg border border-gray-200 relative">
                   <CameraView
                     key={`${resolution}-${orientation}-${isCameraOn}`}
                     onVideoReady={handleVideoReady}
@@ -498,10 +492,10 @@ export function DashboardPage() {
 
                   {/* 카메라 오버레이 정보 */}
                   {isCameraOn && (
-                    <div className="absolute top-3 left-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-black/60 backdrop-blur-sm border border-red-500/30">
-                      <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50" />
-                      <span className="text-white text-xs font-bold tracking-wider" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                        LIVE FEED
+                    <div className="absolute top-3 left-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-black/60 backdrop-blur-sm border border-red-400">
+                      <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                      <span className="text-white text-xs font-semibold">
+                        라이브
                       </span>
                     </div>
                   )}
@@ -509,16 +503,16 @@ export function DashboardPage() {
               </main>
 
               {/* 우측: 출입 기록 & 컨트롤 패널 */}
-              <aside className="w-96 flex flex-col overflow-hidden border-l border-blue-500/20">
+              <aside className="w-96 flex flex-col overflow-hidden border-l border-gray-200">
                 {/* 출입 기록 스트림 */}
-                <div className="flex-1 overflow-hidden bg-gradient-to-b from-slate-900/50 to-slate-900/30">
+                <div className="flex-1 overflow-hidden bg-gray-50">
                   <div className="h-full flex flex-col">
-                    <div className="px-4 py-3 border-b border-blue-500/20 flex-shrink-0">
+                    <div className="px-4 py-3 border-b border-gray-200 flex-shrink-0">
                       <div className="flex items-center justify-between">
-                        <h2 className="text-white text-xs font-bold tracking-wider" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                          ACCESS LOG STREAM
+                        <h2 className="text-gray-900 text-xs font-bold">
+                          출입 기록
                         </h2>
-                        <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded text-[10px] font-bold border border-blue-500/30" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-[10px] font-semibold border border-blue-200">
                           {accessLogs.length}
                         </span>
                       </div>
@@ -527,11 +521,11 @@ export function DashboardPage() {
                     <div className="flex-1 overflow-y-auto px-4 py-3 min-h-0 custom-scrollbar">
                       {accessLogs.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center">
-                          <svg className="w-12 h-12 text-blue-500/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                           </svg>
-                          <p className="text-blue-500/40 text-xs font-semibold" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                            NO ACTIVITY LOGGED
+                          <p className="text-gray-400 text-xs font-semibold">
+                            활동 기록 없음
                           </p>
                         </div>
                       ) : (
@@ -539,10 +533,10 @@ export function DashboardPage() {
                           {accessLogs.map((log, idx) => (
                             <div
                               key={log.id}
-                              className={`p-3 rounded-lg border transition-all backdrop-blur-sm ${
+                              className={`p-3 rounded-lg border transition-all ${
                                 log.status === 'success'
-                                  ? 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20'
-                                  : 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20'
+                                  ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                                  : 'bg-red-50 border-red-200 hover:bg-red-100'
                               }`}
                               style={{
                                 animation: `slideIn 0.3s ease-out ${idx * 0.05}s both`
@@ -551,22 +545,22 @@ export function DashboardPage() {
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <span className={`text-xs font-bold truncate ${log.status === 'success' ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'ui-monospace, monospace' }}>
-                                      {log.userName || 'UNKNOWN USER'}
+                                    <span className={`text-xs font-semibold truncate ${log.status === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+                                      {log.userName || '미확인 사용자'}
                                     </span>
-                                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider ${
+                                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${
                                       log.status === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                                    }`} style={{ fontFamily: 'ui-monospace, monospace' }}>
-                                      {log.status === 'success' ? 'PASS' : 'DENY'}
+                                    }`}>
+                                      {log.status === 'success' ? '승인' : '거부'}
                                     </span>
                                   </div>
-                                  <div className="text-[10px] text-slate-400" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                                    {new Date(log.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                                  <div className="text-[10px] text-gray-500">
+                                    {new Date(log.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
                                   </div>
                                 </div>
                                 {log.confidence !== undefined && (
                                   <div className="text-right flex-shrink-0">
-                                    <div className={`text-sm font-bold ${log.status === 'success' ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'ui-monospace, monospace' }}>
+                                    <div className={`text-sm font-semibold ${log.status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
                                       {(log.confidence * 100).toFixed(0)}%
                                     </div>
                                   </div>
@@ -581,18 +575,17 @@ export function DashboardPage() {
                 </div>
 
                 {/* 컨트롤 패널 */}
-                <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-t border-blue-500/20 p-4 flex-shrink-0">
+                <div className="bg-white border-t border-gray-200 p-4 flex-shrink-0">
                   <div className="space-y-3">
                     {/* 수동 인증 버튼 */}
                     <button
                       onClick={handleManualAuth}
                       disabled={!isCameraOn || isAuthenticating}
-                      className={`w-full py-4 rounded-xl font-bold text-sm tracking-wider transition-all ${
+                      className={`w-full py-4 rounded-xl font-bold text-sm transition-all ${
                         !isCameraOn || isAuthenticating
-                          ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/30'
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg'
                       }`}
-                      style={{ fontFamily: 'ui-monospace, monospace' }}
                     >
                       {isAuthenticating ? (
                         <div className="flex items-center justify-center gap-2">
@@ -600,10 +593,10 @@ export function DashboardPage() {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
-                          <span>AUTHENTICATING...</span>
+                          <span>인증 중...</span>
                         </div>
                       ) : (
-                        'MANUAL AUTHENTICATION'
+                        '수동 인증'
                       )}
                     </button>
 
@@ -611,14 +604,13 @@ export function DashboardPage() {
                     <div className="grid grid-cols-2 gap-2">
                       {/* 해상도 */}
                       <div className="col-span-2">
-                        <label className="block text-[10px] text-blue-400 font-bold tracking-widest mb-1.5" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                          RESOLUTION
+                        <label className="block text-[10px] text-gray-700 font-semibold mb-1.5">
+                          해상도
                         </label>
                         <select
                           value={resolution}
                           onChange={(e) => handleResolutionChange(e.target.value as Resolution)}
-                          className="w-full px-3 py-2 bg-slate-800 border border-blue-500/30 rounded-lg text-white text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                          style={{ fontFamily: 'ui-monospace, monospace' }}
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         >
                           <option value="hd">1280×720 HD</option>
                           <option value="fhd">1920×1080 FHD</option>
@@ -629,40 +621,36 @@ export function DashboardPage() {
                       {/* 방향 */}
                       <button
                         onClick={() => handleOrientationChange('landscape')}
-                        className="px-3 py-2 rounded-lg border border-blue-500 bg-blue-500 text-white text-xs font-bold tracking-wider transition-all"
-                        style={{ fontFamily: 'ui-monospace, monospace' }}
+                        className="px-3 py-2 rounded-lg border border-blue-500 bg-blue-500 text-white text-xs font-semibold transition-all"
                       >
-                        LANDSCAPE
+                        가로
                       </button>
                       <button
                         onClick={() => handleOrientationChange('portrait')}
-                        className="px-3 py-2 rounded-lg border border-blue-500/30 bg-slate-800 text-blue-400 hover:bg-slate-700 text-xs font-bold tracking-wider transition-all"
-                        style={{ fontFamily: 'ui-monospace, monospace' }}
+                        className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 text-xs font-semibold transition-all"
                       >
-                        PORTRAIT
+                        세로
                       </button>
                     </div>
 
                     {/* 카메라 토글 */}
                     <button
                       onClick={handleCameraToggle}
-                      className={`w-full py-3 rounded-lg font-bold text-xs tracking-wider transition-all ${
+                      className={`w-full py-3 rounded-lg font-semibold text-xs transition-all ${
                         isCameraOn
-                          ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
-                          : 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+                          ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+                          : 'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100'
                       }`}
-                      style={{ fontFamily: 'ui-monospace, monospace' }}
                     >
-                      {isCameraOn ? 'CAMERA OFF' : 'CAMERA ON'}
+                      {isCameraOn ? '카메라 끄기' : '카메라 켜기'}
                     </button>
 
                     {/* 사용자 관리 버튼 */}
                     <button
                       onClick={handleAddUser}
-                      className="w-full py-3 rounded-lg bg-slate-800 text-blue-400 border border-blue-500/30 font-bold text-xs tracking-wider hover:bg-slate-700 transition-all"
-                      style={{ fontFamily: 'ui-monospace, monospace' }}
+                      className="w-full py-3 rounded-lg bg-gray-100 text-gray-700 border border-gray-200 font-semibold text-xs hover:bg-gray-200 transition-all"
                     >
-                      + ADD USER
+                      + 사용자 추가
                     </button>
                   </div>
                 </div>
