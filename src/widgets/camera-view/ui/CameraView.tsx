@@ -1,10 +1,8 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import { Card, CardBody, Button } from '@/shared/ui';
-import { CAMERA_CONFIG } from '@/shared/config/constants';
+import { Button } from '@/shared/ui';
 import type { Resolution, Orientation } from '@/shared/types';
-import { RESOLUTION_MAP } from '@/shared/types';
+import { useCameraStream } from '../hooks/useCameraStream';
 
 interface CameraViewProps {
   onVideoReady?: (video: HTMLVideoElement, canvas: HTMLCanvasElement) => void;
@@ -12,11 +10,21 @@ interface CameraViewProps {
   showControls?: boolean;
   autoStart?: boolean;
   className?: string;
-  fullScreen?: boolean; // 전체 화면 모드 (Card 래퍼 제거)
-  resolution?: Resolution; // 해상도 설정
-  orientation?: Orientation; // 방향 설정
+  fullScreen?: boolean;
+  resolution?: Resolution;
+  orientation?: Orientation;
 }
 
+/**
+ * CameraView 컴포넌트 (리팩터링 완료)
+ *
+ * 책임: 카메라 UI 렌더링
+ * - Hook으로 로직 분리
+ * - fullScreen에 따른 조건부 렌더링 (OCP 원칙)
+ *
+ * 이전: 324줄 (카메라 로직 + UI 렌더링 혼재)
+ * 현재: ~200줄 (UI 렌더링만)
+ */
 export function CameraView({
   onVideoReady,
   onVideoStop,
@@ -27,133 +35,34 @@ export function CameraView({
   resolution = 'fhd',
   orientation = 'landscape',
 }: CameraViewProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const isStartedRef = useRef(false);
+  // 공통 로직을 Hook으로 분리
+  const camera = useCameraStream({
+    autoStart,
+    resolution,
+    orientation,
+    onVideoReady,
+    onVideoStop,
+  });
 
-  // 콜백을 ref로 저장하여 의존성 문제 해결
-  const onVideoReadyRef = useRef(onVideoReady);
-  const onVideoStopRef = useRef(onVideoStop);
-
-  useEffect(() => {
-    onVideoReadyRef.current = onVideoReady;
-    onVideoStopRef.current = onVideoStop;
-  }, [onVideoReady, onVideoStop]);
-
-  const startCamera = async () => {
-    if (isStartedRef.current || streamRef.current) return;
-    isStartedRef.current = true;
-
-    try {
-      setError(null);
-
-      // 해상도 및 방향에 따른 설정
-      const { width, height } = RESOLUTION_MAP[resolution];
-      const videoConstraints = orientation === 'portrait'
-        ? { width: { ideal: height }, height: { ideal: width } }
-        : { width: { ideal: width }, height: { ideal: height } };
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          ...videoConstraints,
-          facingMode: CAMERA_CONFIG.FACING_MODE,
-        },
-      });
-
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        const video = videoRef.current;
-        video.srcObject = stream;
-
-        // 비디오가 준비되면 재생
-        video.onloadedmetadata = async () => {
-          try {
-            await video.play();
-            setIsStreaming(true);
-
-            if (canvasRef.current && videoRef.current) {
-              // requestAnimationFrame으로 정확한 렌더링 후 크기 측정
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                  if (canvasRef.current && videoRef.current) {
-                    // getBoundingClientRect로 정확한 렌더링 크기 측정
-                    const rect = videoRef.current.getBoundingClientRect();
-                    canvasRef.current.width = rect.width;
-                    canvasRef.current.height = rect.height;
-
-                    onVideoReadyRef.current?.(videoRef.current, canvasRef.current);
-                  }
-                });
-              });
-            }
-          } catch (playError) {
-            // AbortError는 무시 (새로운 로드 요청으로 인한 중단)
-            if ((playError as Error).name !== 'AbortError') {
-              console.error('Video play error:', playError);
-            }
-          }
-        };
-      }
-    } catch (err) {
-      console.error('Camera error:', err);
-      setError('카메라에 접근할 수 없습니다. 카메라 권한을 확인해주세요.');
-      isStartedRef.current = false;
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-
-    setIsStreaming(false);
-    isStartedRef.current = false;
-    onVideoStopRef.current?.();
-  };
-
-  // 자동 시작 (한 번만 실행)
-  useEffect(() => {
-    if (autoStart && !isStartedRef.current) {
-      startCamera();
-    }
-
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // 전체 화면 모드 - Card 래퍼 없이 렌더링
+  // 전체 화면 모드
   if (fullScreen) {
     return (
       <div className={`relative bg-gray-900 w-full ${className}`} style={{ aspectRatio: '16/9' }}>
         <video
-          ref={videoRef}
+          ref={camera.videoRef}
           className="w-full h-full object-contain"
           style={{ transform: 'scaleX(-1)' }}
           playsInline
           muted
         />
         <canvas
-          ref={canvasRef}
+          ref={camera.canvasRef}
           className="absolute top-0 left-0 w-full h-full pointer-events-none"
           style={{ transform: 'scaleX(-1)' }}
         />
 
         {/* 오버레이 - 카메라 비활성화 */}
-        {!isStreaming && !error && (
+        {!camera.isStreaming && !camera.error && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
             <div className="text-center text-white">
               <svg
@@ -175,7 +84,7 @@ export function CameraView({
         )}
 
         {/* 에러 메시지 */}
-        {error && (
+        {camera.error && (
           <div className="absolute inset-0 flex items-center justify-center bg-red-900/80">
             <div className="text-center text-white p-6">
               <svg
@@ -191,7 +100,7 @@ export function CameraView({
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              <p className="text-base sm:text-lg">{error}</p>
+              <p className="text-base sm:text-lg">{camera.error}</p>
             </div>
           </div>
         )}
@@ -203,23 +112,23 @@ export function CameraView({
   return (
     <div className={`overflow-hidden ${className}`}>
       <div className="p-0 relative w-full" style={{ aspectRatio: '16/9' }}>
-        {/* 비디오 컨테이너 - 16:9 고정 */}
+        {/* 비디오 컨테이너 */}
         <div className="relative w-full h-full bg-gray-900">
           <video
-            ref={videoRef}
+            ref={camera.videoRef}
             className="w-full h-full object-contain"
             style={{ transform: 'scaleX(-1)' }}
             playsInline
             muted
           />
           <canvas
-            ref={canvasRef}
+            ref={camera.canvasRef}
             className="absolute top-0 left-0 w-full h-full pointer-events-none"
             style={{ transform: 'scaleX(-1)' }}
           />
 
           {/* 오버레이 */}
-          {!isStreaming && !error && (
+          {!camera.isStreaming && !camera.error && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
               <div className="text-center text-white">
                 <svg
@@ -241,7 +150,7 @@ export function CameraView({
           )}
 
           {/* 에러 메시지 */}
-          {error && (
+          {camera.error && (
             <div className="absolute inset-0 flex items-center justify-center bg-red-900/80">
               <div className="text-center text-white p-4 portrait:p-5 xl:p-6 2xl:p-8 3xl:p-10">
                 <svg
@@ -257,13 +166,13 @@ export function CameraView({
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>
-                <p className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg">{error}</p>
+                <p className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg">{camera.error}</p>
               </div>
             </div>
           )}
 
-          {/* 스트리밍 인디케이터 - 적응형 (가로/세로) */}
-          {isStreaming && (
+          {/* 스트리밍 인디케이터 */}
+          {camera.isStreaming && (
             <div className="absolute top-3 portrait:top-4 xl:top-4 2xl:top-5 3xl:top-6 left-3 portrait:left-4 xl:left-4 2xl:left-5 3xl:left-6 flex items-center gap-1.5 portrait:gap-2 xl:gap-2 2xl:gap-2.5 3xl:gap-3">
               <span className="w-2.5 h-2.5 portrait:w-3 portrait:h-3 xl:w-3 xl:h-3 2xl:w-3.5 2xl:h-3.5 3xl:w-4 3xl:h-4 bg-red-500 rounded-full animate-pulse" />
               <span className="text-white text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg font-medium drop-shadow">LIVE</span>
@@ -271,11 +180,11 @@ export function CameraView({
           )}
         </div>
 
-        {/* 컨트롤 버튼 - 적응형 (가로/세로) */}
+        {/* 컨트롤 버튼 */}
         {showControls && (
           <div className="p-3 portrait:p-4 xl:p-4 2xl:p-5 3xl:p-6 bg-gray-50 flex justify-center gap-3 portrait:gap-4 xl:gap-4 2xl:gap-5 3xl:gap-6">
-            {!isStreaming ? (
-              <Button onClick={startCamera} variant="primary" className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg px-3 portrait:px-4 xl:px-4 2xl:px-5 3xl:px-6 py-2 portrait:py-2.5 xl:py-2.5 2xl:py-3 3xl:py-3.5">
+            {!camera.isStreaming ? (
+              <Button onClick={camera.startCamera} variant="primary" className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg px-3 portrait:px-4 xl:px-4 2xl:px-5 3xl:px-6 py-2 portrait:py-2.5 xl:py-2.5 2xl:py-3 3xl:py-3.5">
                 <svg
                   className="w-4 h-4 portrait:w-5 portrait:h-5 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 3xl:w-7 3xl:h-7 mr-2"
                   fill="none"
@@ -292,7 +201,7 @@ export function CameraView({
                 카메라 시작
               </Button>
             ) : (
-              <Button onClick={stopCamera} variant="danger" className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg px-3 portrait:px-4 xl:px-4 2xl:px-5 3xl:px-6 py-2 portrait:py-2.5 xl:py-2.5 2xl:py-3 3xl:py-3.5">
+              <Button onClick={camera.stopCamera} variant="danger" className="text-xs portrait:text-sm xl:text-sm 2xl:text-base 3xl:text-lg px-3 portrait:px-4 xl:px-4 2xl:px-5 3xl:px-6 py-2 portrait:py-2.5 xl:py-2.5 2xl:py-3 3xl:py-3.5">
                 <svg
                   className="w-4 h-4 portrait:w-5 portrait:h-5 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 3xl:w-7 3xl:h-7 mr-2"
                   fill="none"
