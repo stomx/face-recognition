@@ -233,21 +233,21 @@ export function DashboardPage() {
                   label="승인"
                   variant="success"
                   size="compact"
-                  className="text-[10px] font-semibold uppercase"
+                  labelClassName="text-[10px] text-green-600 font-semibold uppercase"
                 />
                 <StatCard
                   value={todayFailCount}
                   label="거부"
                   variant="error"
                   size="compact"
-                  className="text-[10px] font-semibold uppercase"
+                  labelClassName="text-[10px] text-red-600 font-semibold uppercase"
                 />
                 <StatCard
                   value={users.length}
                   label="사용자"
                   variant="info"
                   size="compact"
-                  className="text-[10px] font-semibold uppercase"
+                  labelClassName="text-[10px] text-blue-600 font-semibold uppercase"
                 />
               </StatsGrid>
             </div>

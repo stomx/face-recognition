@@ -7,6 +7,7 @@ export interface StatCardProps {
   size?: 'compact' | 'large';
   icon?: ReactNode;
   className?: string;
+  labelClassName?: string;
 }
 
 const variantClasses = {
@@ -35,7 +36,8 @@ export function StatCard({
   variant = 'default',
   size = 'compact',
   icon,
-  className = ''
+  className = '',
+  labelClassName = ''
 }: StatCardProps) {
   const sizeConfig = sizeClasses[size];
 
@@ -47,7 +49,7 @@ export function StatCard({
         </div>
       )}
       <p className={`${sizeConfig.value} font-bold`}>{value}</p>
-      <p className={`${sizeConfig.label} opacity-70 mt-1`}>{label}</p>
+      <p className={`${sizeConfig.label} opacity-70 mt-1 ${labelClassName}`}>{label}</p>
     </div>
   );
 }
