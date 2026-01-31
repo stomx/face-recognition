@@ -166,7 +166,7 @@ export function RegisterPage() {
                         setIsAddingToExisting(false);
                         setSelectedUserId('');
                       }}
-                      className="w-4 h-4 text-blue-600"
+                      className="w-4 h-4 text-blue-600 cursor-pointer"
                     />
                     <span className="text-xs portrait:text-sm xl:text-sm 2xl:text-base font-medium">새 사용자</span>
                   </label>
@@ -175,7 +175,7 @@ export function RegisterPage() {
                       type="radio"
                       checked={isAddingToExisting}
                       onChange={() => setIsAddingToExisting(true)}
-                      className="w-4 h-4 text-blue-600"
+                      className="w-4 h-4 text-blue-600 cursor-pointer"
                       disabled={users.length === 0}
                     />
                     <span className="text-xs portrait:text-sm xl:text-sm 2xl:text-base font-medium">기존 사용자에 추가</span>
@@ -203,7 +203,7 @@ export function RegisterPage() {
                     <select
                       value={selectedUserId}
                       onChange={(e) => setSelectedUserId(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs portrait:text-sm xl:text-sm 2xl:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs portrait:text-sm xl:text-sm 2xl:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                     >
                       <option value="">사용자를 선택하세요</option>
                       {users.map((user) => (

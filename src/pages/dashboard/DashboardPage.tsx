@@ -324,7 +324,7 @@ export function DashboardPage() {
                 className={`w-full py-4 rounded-xl font-bold text-sm transition-all ${
                   !isCameraOn || isAuthenticating
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg cursor-pointer'
                 }`}
               >
                 {isAuthenticating ? (
@@ -348,7 +348,7 @@ export function DashboardPage() {
                   <select
                     value={resolution}
                     onChange={(e) => handleResolutionChange(e.target.value as Resolution)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
                   >
                     <option value="hd">1280×720 HD</option>
                     <option value="fhd">1920×1080 FHD</option>
@@ -360,13 +360,13 @@ export function DashboardPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => handleOrientationChange('landscape')}
-                    className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-600 text-xs font-semibold hover:bg-gray-50 transition-all"
+                    className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-600 text-xs font-semibold hover:bg-gray-50 transition-all cursor-pointer"
                   >
                     가로
                   </button>
                   <button
                     onClick={() => handleOrientationChange('portrait')}
-                    className="px-3 py-2 rounded-lg border border-blue-500 bg-blue-500 text-white text-xs font-semibold transition-all"
+                    className="px-3 py-2 rounded-lg border border-blue-500 bg-blue-500 text-white text-xs font-semibold transition-all cursor-pointer"
                   >
                     세로
                   </button>
@@ -375,7 +375,7 @@ export function DashboardPage() {
                 {/* 카메라 토글 */}
                 <button
                   onClick={handleCameraToggle}
-                  className={`w-full py-2.5 rounded-lg font-semibold text-xs transition-all ${
+                  className={`w-full py-2.5 rounded-lg font-semibold text-xs transition-all cursor-pointer ${
                     isCameraOn
                       ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
                       : 'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100'
@@ -584,7 +584,7 @@ export function DashboardPage() {
                       className={`w-full py-4 rounded-xl font-bold text-sm transition-all ${
                         !isCameraOn || isAuthenticating
                           ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg'
+                          : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg cursor-pointer'
                       }`}
                     >
                       {isAuthenticating ? (
@@ -610,7 +610,7 @@ export function DashboardPage() {
                         <select
                           value={resolution}
                           onChange={(e) => handleResolutionChange(e.target.value as Resolution)}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
                         >
                           <option value="hd">1280×720 HD</option>
                           <option value="fhd">1920×1080 FHD</option>
@@ -621,13 +621,13 @@ export function DashboardPage() {
                       {/* 방향 */}
                       <button
                         onClick={() => handleOrientationChange('landscape')}
-                        className="px-3 py-2 rounded-lg border border-blue-500 bg-blue-500 text-white text-xs font-semibold transition-all"
+                        className="px-3 py-2 rounded-lg border border-blue-500 bg-blue-500 text-white text-xs font-semibold transition-all cursor-pointer"
                       >
                         가로
                       </button>
                       <button
                         onClick={() => handleOrientationChange('portrait')}
-                        className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 text-xs font-semibold transition-all"
+                        className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 text-xs font-semibold transition-all cursor-pointer"
                       >
                         세로
                       </button>
@@ -636,7 +636,7 @@ export function DashboardPage() {
                     {/* 카메라 토글 */}
                     <button
                       onClick={handleCameraToggle}
-                      className={`w-full py-3 rounded-lg font-semibold text-xs transition-all ${
+                      className={`w-full py-3 rounded-lg font-semibold text-xs transition-all cursor-pointer ${
                         isCameraOn
                           ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
                           : 'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100'
@@ -648,7 +648,7 @@ export function DashboardPage() {
                     {/* 사용자 관리 버튼 */}
                     <button
                       onClick={handleAddUser}
-                      className="w-full py-3 rounded-lg bg-gray-100 text-gray-700 border border-gray-200 font-semibold text-xs hover:bg-gray-200 transition-all"
+                      className="w-full py-3 rounded-lg bg-gray-100 text-gray-700 border border-gray-200 font-semibold text-xs hover:bg-gray-200 transition-all cursor-pointer"
                     >
                       + 사용자 추가
                     </button>
