@@ -124,15 +124,6 @@ export function DashboardPage() {
           message: '인증 성공',
         });
       }
-
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        const box = detection.detection.box;
-        ctx.strokeStyle = '#00ff00';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(box.x, box.y, box.width, box.height);
-      }
     } catch (error) {
       console.error('인증 실패:', error);
       addAccessLog(null, null, 'failed');
