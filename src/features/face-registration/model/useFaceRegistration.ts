@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useUserRepository } from '@/entities/user';
+import { useUserRepository } from '@/entities/user'; // DIP: 인터페이스 의존
 import { detectFace, findBestMatch } from '@/shared/lib/face-api';
 import { FACE_DETECTION_CONFIG } from '@/shared/config/constants';
 import type { User } from '@/shared/types';
+import type { IUserRepository } from '@/shared/types/repository'; // DIP: 인터페이스 타입
 import * as faceapi from '@vladmandic/face-api';
 import { useFaceImageCapture } from '../lib/useFaceImageCapture';
 
@@ -18,10 +19,14 @@ interface DuplicateCheckResult {
   imageData: string | null;
 }
 
+/**
+ * 얼굴 등록 Hook
+ * DIP 원칙 준수: IUserRepository 인터페이스에 의존
+ */
 export function useFaceRegistration() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
-  const userRepo = useUserRepository();
+  const userRepo: IUserRepository = useUserRepository(); // DIP: 인터페이스 타입 명시
   const users = userRepo.getAll();
   const { captureImage } = useFaceImageCapture();
 
