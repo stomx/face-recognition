@@ -24,7 +24,7 @@ interface ResultState {
 
 export function DashboardPage() {
   const router = useRouter();
-  const { users, addUser, updateUser, removeUser, addAccessLog, accessLogs, hydrate, isHydrated, getLabeledDescriptors, getUserById } = useUserStore();
+  const { users, addUser, updateUser, removeUser, addFaceToUser, addAccessLog, accessLogs, hydrate, isHydrated, getLabeledDescriptors, getUserById } = useUserStore();
   const { modelStatus, initializeModels } = useFaceDetection();
 
   const [resolution, setResolution] = useState<Resolution>('fhd');
@@ -160,7 +160,15 @@ export function DashboardPage() {
     if (editingUser) {
       updateUser(editingUser.id, name, faceDescriptor, imageData);
     } else {
-      addUser(name, faceDescriptor, imageData);
+      // 새 사용자 등록 시 동일 이름 확인
+      const existingUser = users.find(u => u.name === name);
+      if (existingUser) {
+        // 동일 이름 사용자가 있으면 얼굴 추가
+        addFaceToUser(existingUser.id, faceDescriptor, imageData);
+      } else {
+        // 없으면 새 사용자로 등록
+        addUser(name, faceDescriptor, imageData);
+      }
     }
     setShowUserModal(false);
     setEditingUser(undefined);

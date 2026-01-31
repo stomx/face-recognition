@@ -3,8 +3,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { CameraView } from '@/widgets/camera-view';
 import { PrimaryButton } from '@/shared/ui';
-import { detectFace } from '@/shared/lib/face-api';
+import { useFaceRegistration, DuplicateCheckModal } from '@/features/face-registration';
 import type { User } from '@/shared/types';
+import * as faceapi from '@vladmandic/face-api';
 
 interface UserFormModalProps {
   user?: User;
@@ -14,6 +15,8 @@ interface UserFormModalProps {
 }
 
 export function UserFormModal({ user, modelStatus, onSave, onClose }: UserFormModalProps) {
+  const { isRegistering, registrationError, checkForDuplicates } = useFaceRegistration();
+
   const [name, setName] = useState(user?.name || '');
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -23,6 +26,15 @@ export function UserFormModal({ user, modelStatus, onSave, onClose }: UserFormMo
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // 중복 체크 관련 상태
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicateUser, setDuplicateUser] = useState<User | null>(null);
+  const [duplicateConfidence, setDuplicateConfidence] = useState(0);
+  const [pendingDetection, setPendingDetection] = useState<faceapi.WithFaceDescriptor<
+    faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
+  > | null>(null);
+  const [pendingImageData, setPendingImageData] = useState<string | null>(null);
 
   const handleVideoReady = useCallback((video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
     videoRef.current = video;
@@ -39,27 +51,56 @@ export function UserFormModal({ user, modelStatus, onSave, onClose }: UserFormMo
     setError(null);
 
     try {
-      const detection = await detectFace(videoRef.current);
+      // 편집 모드이거나 중복 확인 필요 없는 경우
+      if (user) {
+        // 기존 사용자 수정 - 중복 확인 안함
+        const { detectFace } = await import('@/shared/lib/face-api');
+        const detection = await detectFace(videoRef.current);
 
-      if (!detection) {
-        setError('얼굴이 감지되지 않았습니다. 다시 시도해주세요.');
-        setIsCapturing(false);
-        return;
+        if (!detection) {
+          setError('얼굴이 감지되지 않았습니다. 다시 시도해주세요.');
+          setIsCapturing(false);
+          return;
+        }
+
+        // 캡처된 이미지 저장
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(videoRef.current, 0, 0);
+          const imageData = canvas.toDataURL('image/jpeg', 0.8);
+          setCapturedImage(imageData);
+          setCapturedDescriptor(detection.descriptor);
+        }
+
+        setIsCameraOn(false);
+      } else {
+        // 새 사용자 등록 - 중복 확인
+        const result = await checkForDuplicates(videoRef.current, canvasRef.current);
+
+        if (!result.detection || !result.imageData) {
+          setError(registrationError || '얼굴 감지에 실패했습니다');
+          setIsCapturing(false);
+          return;
+        }
+
+        if (result.hasDuplicate && result.duplicateUser) {
+          // 중복 발견 - 모달 표시
+          setPendingDetection(result.detection);
+          setPendingImageData(result.imageData);
+          setDuplicateUser(result.duplicateUser);
+          setDuplicateConfidence(result.confidence);
+          setShowDuplicateModal(true);
+          setIsCapturing(false);
+        } else {
+          // 중복 없음 - 캡처 완료
+          setCapturedImage(result.imageData);
+          setCapturedDescriptor(result.detection.descriptor);
+          setIsCameraOn(false);
+        }
       }
-
-      // 캡처된 이미지 저장
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
-        setCapturedImage(imageData);
-        setCapturedDescriptor(detection.descriptor);
-      }
-
-      setIsCameraOn(false);
     } catch (err) {
       console.error('캡처 실패:', err);
       setError('캡처 중 오류가 발생했습니다');
@@ -73,6 +114,44 @@ export function UserFormModal({ user, modelStatus, onSave, onClose }: UserFormMo
     setCapturedDescriptor(null);
     setIsCameraOn(true);
     setError(null);
+  };
+
+  const handleConfirmSamePerson = () => {
+    if (!duplicateUser || !pendingDetection || !pendingImageData) return;
+
+    // 기존 사용자에 얼굴 추가 - 부모 컴포넌트에 알림
+    setCapturedImage(pendingImageData);
+    setCapturedDescriptor(pendingDetection.descriptor);
+    setName(duplicateUser.name); // 기존 사용자 이름으로 설정
+    setIsCameraOn(false);
+
+    // 모달 닫기 및 상태 초기화
+    setShowDuplicateModal(false);
+    setDuplicateUser(null);
+    setPendingDetection(null);
+    setPendingImageData(null);
+  };
+
+  const handleConfirmDifferentPerson = () => {
+    if (!pendingDetection || !pendingImageData) return;
+
+    // 새 사용자로 등록
+    setCapturedImage(pendingImageData);
+    setCapturedDescriptor(pendingDetection.descriptor);
+    setIsCameraOn(false);
+
+    // 모달 닫기 및 상태 초기화
+    setShowDuplicateModal(false);
+    setDuplicateUser(null);
+    setPendingDetection(null);
+    setPendingImageData(null);
+  };
+
+  const handleCancelDuplicate = () => {
+    setShowDuplicateModal(false);
+    setDuplicateUser(null);
+    setPendingDetection(null);
+    setPendingImageData(null);
   };
 
   const handleSubmit = () => {
@@ -95,8 +174,22 @@ export function UserFormModal({ user, modelStatus, onSave, onClose }: UserFormMo
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <>
+      {/* 중복 확인 모달 */}
+      {showDuplicateModal && duplicateUser && pendingImageData && (
+        <DuplicateCheckModal
+          isOpen={showDuplicateModal}
+          existingUser={duplicateUser}
+          newFaceImage={pendingImageData}
+          confidence={duplicateConfidence}
+          onConfirmSamePerson={handleConfirmSamePerson}
+          onConfirmDifferentPerson={handleConfirmDifferentPerson}
+          onCancel={handleCancelDuplicate}
+        />
+      )}
+
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* 헤더 */}
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
@@ -197,6 +290,7 @@ export function UserFormModal({ user, modelStatus, onSave, onClose }: UserFormMo
           </PrimaryButton>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

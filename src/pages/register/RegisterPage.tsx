@@ -4,7 +4,9 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useUserStore, UserCard } from '@/entities/user';
 import { useFaceDetection } from '@/features/face-detection';
-import { useFaceRegistration } from '@/features/face-registration';
+import { useFaceRegistration, DuplicateCheckModal } from '@/features/face-registration';
+import type { User } from '@/shared/types';
+import * as faceapi from '@vladmandic/face-api';
 import { CameraView } from '@/widgets/camera-view';
 import { Card, CardHeader, CardBody, Button, Input, Badge, LoadingSpinner, EmptyState } from '@/shared/ui';
 
@@ -12,8 +14,16 @@ export function RegisterPage() {
   const { users, isHydrated, hydrate, removeUser, removeFaceFromUser } = useUserStore();
   const { modelStatus, initializeModels, startContinuousDetection, stopContinuousDetection } =
     useFaceDetection();
-  const { isRegistering, registrationError, registerFace, addFaceToExistingUser, clearError } =
-    useFaceRegistration();
+  const {
+    isRegistering,
+    registrationError,
+    registerFace,
+    addFaceToExistingUser,
+    checkForDuplicates,
+    registerFaceWithData,
+    addFaceToUserWithData,
+    clearError,
+  } = useFaceRegistration();
 
   const [name, setName] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
@@ -21,6 +31,16 @@ export function RegisterPage() {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // 중복 체크 관련 상태
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicateUser, setDuplicateUser] = useState<User | null>(null);
+  const [duplicateConfidence, setDuplicateConfidence] = useState(0);
+  const [pendingDetection, setPendingDetection] = useState<faceapi.WithFaceDescriptor<
+    faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }>
+  > | null>(null);
+  const [pendingImageData, setPendingImageData] = useState<string | null>(null);
+  const [pendingName, setPendingName] = useState('');
 
   // 초기화
   useEffect(() => {
@@ -52,25 +72,93 @@ export function RegisterPage() {
     if (!videoRef.current || !canvasRef.current) return;
 
     clearError();
-    let success = false;
 
     if (isAddingToExisting) {
-      // 기존 사용자에게 얼굴 추가
-      const selectedUser = users.find(u => u.id === selectedUserId);
+      // 기존 사용자에게 얼굴 추가 (중복 체크 건너뛰기)
+      const selectedUser = users.find((u) => u.id === selectedUserId);
       if (selectedUser) {
-        success = await addFaceToExistingUser(videoRef.current, canvasRef.current, selectedUser.name);
+        const success = await addFaceToExistingUser(
+          videoRef.current,
+          canvasRef.current,
+          selectedUser.name
+        );
+        if (success) {
+          setSelectedUserId('');
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
+        }
       }
     } else {
-      // 새 사용자 등록
-      success = await registerFace(videoRef.current, canvasRef.current, name);
-    }
+      // 새 사용자 등록 - 중복 체크 먼저 수행
+      const result = await checkForDuplicates(videoRef.current, canvasRef.current);
 
+      if (!result.detection || !result.imageData) {
+        // 얼굴 감지 실패 (에러는 이미 useFaceRegistration에서 설정됨)
+        return;
+      }
+
+      if (result.hasDuplicate && result.duplicateUser) {
+        // 중복 발견 - 모달 표시
+        setPendingName(name);
+        setPendingDetection(result.detection);
+        setPendingImageData(result.imageData);
+        setDuplicateUser(result.duplicateUser);
+        setDuplicateConfidence(result.confidence);
+        setShowDuplicateModal(true);
+      } else {
+        // 중복 없음 - 바로 등록
+        const success = registerFaceWithData(name, result.detection, result.imageData);
+        if (success) {
+          setName('');
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
+        }
+      }
+    }
+  };
+
+  const handleConfirmSamePerson = () => {
+    if (!duplicateUser || !pendingDetection || !pendingImageData) return;
+
+    const success = addFaceToUserWithData(duplicateUser.id, pendingDetection, pendingImageData);
     if (success) {
       setName('');
-      setSelectedUserId('');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     }
+
+    // 모달 닫기 및 상태 초기화
+    setShowDuplicateModal(false);
+    setDuplicateUser(null);
+    setPendingDetection(null);
+    setPendingImageData(null);
+    setPendingName('');
+  };
+
+  const handleConfirmDifferentPerson = () => {
+    if (!pendingDetection || !pendingImageData || !pendingName) return;
+
+    const success = registerFaceWithData(pendingName, pendingDetection, pendingImageData);
+    if (success) {
+      setName('');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    }
+
+    // 모달 닫기 및 상태 초기화
+    setShowDuplicateModal(false);
+    setDuplicateUser(null);
+    setPendingDetection(null);
+    setPendingImageData(null);
+    setPendingName('');
+  };
+
+  const handleCancelDuplicate = () => {
+    setShowDuplicateModal(false);
+    setDuplicateUser(null);
+    setPendingDetection(null);
+    setPendingImageData(null);
+    setPendingName('');
   };
 
   const handleDeleteUser = (id: string) => {
@@ -92,9 +180,23 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* 헤더 - 적응형 (가로/세로) */}
-      <header className="bg-white shadow-sm">
+    <>
+      {/* 중복 확인 모달 */}
+      {showDuplicateModal && duplicateUser && pendingImageData && (
+        <DuplicateCheckModal
+          isOpen={showDuplicateModal}
+          existingUser={duplicateUser}
+          newFaceImage={pendingImageData}
+          confidence={duplicateConfidence}
+          onConfirmSamePerson={handleConfirmSamePerson}
+          onConfirmDifferentPerson={handleConfirmDifferentPerson}
+          onCancel={handleCancelDuplicate}
+        />
+      )}
+
+      <div className="min-h-screen bg-gray-100">
+        {/* 헤더 - 적응형 (가로/세로) */}
+        <header className="bg-white shadow-sm">
         <div className="max-w-[1200px] xl:max-w-[1400px] 2xl:max-w-[1800px] 3xl:max-w-[2200px] mx-auto px-4 portrait:px-5 py-3 portrait:py-4 xl:py-4 2xl:py-5 3xl:py-6 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 portrait:gap-3 xl:gap-3 2xl:gap-4 3xl:gap-5">
@@ -321,6 +423,7 @@ export function RegisterPage() {
           </div>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 }
