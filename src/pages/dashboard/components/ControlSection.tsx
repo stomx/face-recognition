@@ -38,7 +38,7 @@ export function ControlSection({
   onAddUser,
 }: ControlSectionProps) {
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50 border-t border-gray-200 p-4 hd-l:p-5 fhd-l:p-6 qhd-l:p-8 flex-shrink-0 shadow-inner">
+    <div className="glass border-t border-white/20 p-4 hd-l:p-5 fhd-l:p-6 qhd-l:p-8 flex-shrink-0 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
       <div className="max-w-7xl mx-auto space-y-4 hd-l:space-y-5 fhd-l:space-y-6 qhd-l:space-y-8">
         {/* 주요 액션: 수동 인증 */}
         <button
@@ -72,7 +72,7 @@ export function ControlSection({
         {/* 설정 그룹 */}
         <div className="grid grid-cols-3 gap-3 hd-l:gap-4 fhd-l:gap-5 qhd-l:gap-6">
           {/* 해상도 선택 */}
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-3 hd-l:p-4 fhd-l:p-4 qhd-l:p-5 hover:border-blue-300 transition-all">
+          <div className="glass-light rounded-2xl border-2 border-white/30 p-3 hd-l:p-4 fhd-l:p-4 qhd-l:p-5 hover:border-blue-400/50 transition-all">
             <label className="block text-[10px] hd-l:text-xs fhd-l:text-xs qhd-l:text-sm text-gray-600 font-bold mb-2 hd-l:mb-2.5 fhd-l:mb-3 qhd-l:mb-3 uppercase tracking-wide">
               해상도
             </label>
@@ -88,7 +88,7 @@ export function ControlSection({
           </div>
 
           {/* 방향 선택 */}
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-3 hd-l:p-4 fhd-l:p-4 qhd-l:p-5">
+          <div className="glass-light rounded-2xl border-2 border-white/30 p-3 hd-l:p-4 fhd-l:p-4 qhd-l:p-5">
             <label className="block text-[10px] hd-l:text-xs fhd-l:text-xs qhd-l:text-sm text-gray-600 font-bold mb-2 hd-l:mb-2.5 fhd-l:mb-3 qhd-l:mb-3 uppercase tracking-wide">
               화면 방향
             </label>
@@ -117,7 +117,7 @@ export function ControlSection({
           </div>
 
           {/* 카메라 토글 */}
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-3 hd-l:p-4 fhd-l:p-4 qhd-l:p-5">
+          <div className="glass-light rounded-2xl border-2 border-white/30 p-3 hd-l:p-4 fhd-l:p-4 qhd-l:p-5">
             <label className="block text-[10px] hd-l:text-xs fhd-l:text-xs qhd-l:text-sm text-gray-600 font-bold mb-2 hd-l:mb-2.5 fhd-l:mb-3 qhd-l:mb-3 uppercase tracking-wide">
               카메라
             </label>

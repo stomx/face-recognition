@@ -125,14 +125,18 @@ export function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 flex items-center justify-center p-8">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-8">
+      {/* Animated Gradient Mesh Background */}
+      <div className="absolute inset-0 gradient-mesh"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20"></div>
+
+      {/* Main Container */}
+      <div className="relative z-10 w-full max-w-[95vw] max-h-[95vh]">
       <div
-        className="shadow-2xl rounded-2xl overflow-hidden relative"
+        className="glass rounded-3xl overflow-hidden relative animate-scaleIn"
         style={{
           width: `${displayWidth}px`,
           height: `${displayHeight}px`,
-          maxWidth: '95vw',
-          maxHeight: '95vh'
         }}
       >
         <div className="w-full h-full bg-black overflow-hidden relative">
@@ -149,14 +153,14 @@ export function HomePage() {
 
       {/* 상단 영역 */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4 portrait:p-6">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between animate-fadeIn">
           <TimeDisplay />
 
           <div className="flex items-center gap-2 portrait:gap-3">
-            <div className={`flex items-center gap-2 px-3 py-2 portrait:px-4 portrait:py-2.5 rounded-full backdrop-blur-sm ${
+            <div className={`glass-light flex items-center gap-2 px-3 py-2 portrait:px-4 portrait:py-2.5 rounded-full ${
               modelStatus === 'loaded'
-                ? 'bg-green-500/30 text-green-400'
-                : 'bg-yellow-500/30 text-yellow-400'
+                ? 'text-emerald-400'
+                : 'text-amber-400'
             }`}>
               <span className={`w-2 h-2 portrait:w-2.5 portrait:h-2.5 rounded-full ${
                 modelStatus === 'loaded' ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'
@@ -168,7 +172,7 @@ export function HomePage() {
 
             <button
               onClick={() => setShowSettings(true)}
-              className="w-10 h-10 portrait:w-12 portrait:h-12 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 flex items-center justify-center text-white transition-colors"
+              className="w-10 h-10 portrait:w-12 portrait:h-12 rounded-full glass-dark hover:bg-white/20 flex items-center justify-center text-white transition-all transform hover:scale-110"
             >
               <svg className="w-5 h-5 portrait:w-6 portrait:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -182,14 +186,14 @@ export function HomePage() {
 
       {/* 하단 컨트롤 바 */}
       <div className="absolute bottom-0 left-0 right-0 z-10">
-        <div className="bg-gradient-to-t from-black/90 to-transparent">
-          <div className="px-4 pb-6 pt-8 portrait:px-6 portrait:pb-8 portrait:pt-12">
-            <div className="grid grid-cols-3 items-center bg-black/40 backdrop-blur-md rounded-2xl p-3 portrait:p-4">
+        <div className="bg-gradient-to-t from-black/60 to-transparent pb-6 pt-20 portrait:pb-8 portrait:pt-24">
+          <div className="px-4 portrait:px-6">
+            <div className="grid grid-cols-3 items-center glass-dark rounded-3xl p-4 portrait:p-5 animate-fadeIn">
               <div className="flex justify-start">
                 <button
                   onClick={() => setIsAutoMode(!isAutoMode)}
                   disabled={modelStatus !== 'loaded' || users.length === 0}
-                  className="flex items-center gap-2 portrait:gap-3 px-3 py-2 portrait:px-4 portrait:py-3 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 portrait:gap-3 px-3 py-2 portrait:px-4 portrait:py-3 rounded-xl glass-light hover:bg-white/20 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className={`w-10 h-6 portrait:w-12 portrait:h-7 rounded-full relative transition-colors ${
                     isAutoMode ? 'bg-blue-600' : 'bg-gray-600'
@@ -209,7 +213,7 @@ export function HomePage() {
                   <button
                     onClick={() => machine.requestVerify()}
                     disabled={modelStatus !== 'loaded' || users.length === 0 || !machine.canVerify || machine.isShowingResult}
-                    className="flex items-center gap-2 portrait:gap-3 px-6 py-3 portrait:px-8 portrait:py-4 bg-green-500 hover:bg-green-400 disabled:bg-gray-700 disabled:opacity-50 text-white rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-[0.98]"
+                    className="flex items-center gap-2 portrait:gap-3 px-6 py-3 portrait:px-8 portrait:py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 disabled:from-gray-700 disabled:to-gray-600 disabled:opacity-50 text-white rounded-2xl shadow-lg shadow-emerald-500/30 transition-all transform hover:scale-105 active:scale-95"
                   >
                     <svg className="w-5 h-5 portrait:w-6 portrait:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -218,9 +222,9 @@ export function HomePage() {
                     <span className="text-lg portrait:text-xl font-bold">인증</span>
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2 px-4 py-3 portrait:px-6 portrait:py-4 bg-blue-600/30 border border-blue-500/40 rounded-xl">
-                    <span className="w-2.5 h-2.5 portrait:w-3 portrait:h-3 bg-blue-400 rounded-full animate-pulse" />
-                    <span className="text-blue-300 text-base portrait:text-lg font-medium">자동 인증</span>
+                  <div className="flex items-center gap-2 px-4 py-3 portrait:px-6 portrait:py-4 glass-light border-2 border-blue-400/50 rounded-2xl">
+                    <span className="w-2.5 h-2.5 portrait:w-3 portrait:h-3 bg-blue-400 rounded-full animate-pulse shadow-lg shadow-blue-400/50" />
+                    <span className="text-blue-200 text-base portrait:text-lg font-semibold">자동 인증 중</span>
                   </div>
                 )}
               </div>
@@ -250,7 +254,8 @@ export function HomePage() {
           onClose={() => {}}
         />
       )}
-        </div>
+      </div>
+      </div>
       </div>
 
       {/* 설정 패널 - ISP 적용된 그룹화 Props */}

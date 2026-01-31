@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+// Modern sans-serif for UI
+const jakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-sans',
   display: 'swap',
+  weight: ['300', '400', '500', '600', '700', '800'],
 });
 
-const outfit = Outfit({
+// Elegant serif for headings
+const playfair = Playfair_Display({
   subsets: ['latin'],
-  variable: '--font-outfit',
+  variable: '--font-heading',
   display: 'swap',
+  weight: ['400', '500', '600', '700', '800', '900'],
 });
 
 const siteUrl = "https://face-recognition.pages.dev";
@@ -72,7 +76,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${inter.variable} ${outfit.variable} antialiased font-sans`}>
+      <body className={`${jakartaSans.variable} ${playfair.variable} antialiased font-sans`}>
         {children}
       </body>
     </html>

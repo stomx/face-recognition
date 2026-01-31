@@ -39,7 +39,10 @@ export function LandscapeLayout({
   const { accessLogs } = data;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden relative">
+      {/* Gradient Background */}
+      <div className="absolute inset-0 gradient-mesh -z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-cyan-500/10 -z-10"></div>
       {/* 헤더 섹션 (SRP 적용) */}
       <DashboardHeader
         modelStatus={modelStatus}
@@ -52,7 +55,7 @@ export function LandscapeLayout({
       {/* 메인 콘텐츠 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 좌측: 카메라 */}
-        <div className="flex-1 bg-gray-900 flex items-center justify-center p-3 hd-l:p-3.5 fhd-l:p-4 qhd-l:p-6">
+        <div className="flex-1 glass-dark flex items-center justify-center p-3 hd-l:p-3.5 fhd-l:p-4 qhd-l:p-6 m-2 rounded-3xl animate-fadeIn">
           <div className="w-full h-full max-w-3xl hd-l:max-w-3xl fhd-l:max-w-4xl qhd-l:max-w-6xl">
             <CameraView
               onVideoReady={onVideoReady}
@@ -67,8 +70,10 @@ export function LandscapeLayout({
         </div>
 
         {/* 우측: 출입 기록 */}
-        <div className="w-80 hd-l:w-96 fhd-l:w-96 qhd-l:w-[28rem] flex flex-col">
-          <AccessLogSection accessLogs={accessLogs} />
+        <div className="w-80 hd-l:w-96 fhd-l:w-96 qhd-l:w-[28rem] flex flex-col p-2">
+          <div className="glass rounded-3xl h-full overflow-hidden animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+            <AccessLogSection accessLogs={accessLogs} />
+          </div>
         </div>
       </div>
 
