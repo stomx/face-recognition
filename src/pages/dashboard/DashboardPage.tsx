@@ -105,9 +105,11 @@ export function DashboardPage() {
       const bestMatch = findBestMatch(detection.descriptor, labeledDescriptors);
 
       if (!bestMatch || bestMatch.label === 'unknown') {
-        addAccessLog(null, '미확인 사용자', 'failed');
+        const confidence = bestMatch ? 1 - bestMatch.distance : 0;
+        addAccessLog(null, '미확인 사용자', 'failed', confidence);
         setResult({
           type: 'failed',
+          confidence,
           message: '등록되지 않은 얼굴입니다',
         });
       } else {
